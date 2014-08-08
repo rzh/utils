@@ -272,8 +272,9 @@ func (r *TheRun) RunClientTasks(i int, run_dir string) {
 	time.Sleep(5 * time.Second) //chill for 5 second to collect some system stats after test done
 
 	// scp file here
-
 	for j := 0; j < len(r.Runs[i].Client_logs); j++ {
+
+		// copy client logs
 		if len(r.Runs[i].Clients) == 0 {
 			// local
 			ee, er := exec.Command("/bin/cp",
@@ -310,6 +311,47 @@ func (r *TheRun) RunClientTasks(i int, run_dir string) {
 			}
 		}
 	} //for_j for Client_logs
+
+	// copy server logs
+	for j := 0; j < len(r.Runs[i].Server_logs); j++ {
+		if len(r.Runs[i].Servers) == 0 {
+			// local
+			ee, er := exec.Command("/bin/cp",
+				r.Runs[i].Server_logs[j]+" "+run_dir+"/"+r.Runs[i].Server_logs[j]+"--"+
+					r.Runs[i].Servers[0]).Output()
+			if er != nil {
+				log.Fatal("Failed to copy result of client due to -> ", er, string(ee))
+			}
+		} else {
+			// via ssh
+			log.Println(r.Runs[i])
+			for k := 0; k < len(r.Runs[i].Servers); k++ {
+				if r.PemFile != "" {
+					ee, er := exec.Command(
+						"/bin/sh", "-c",
+						fmt.Sprintf("/usr/bin/scp -i %s %s%s%s %s",
+							r.PemFile, r.Runs[i].Servers[k], ":",
+							r.Runs[i].Server_logs[j],
+							run_dir+"/"+r.Runs[i].Server_logs[j]+"--"+r.Runs[i].Servers[k])).Output()
+					log.Println(run_dir + "/" + r.Runs[i].Server_logs[j] + "--" + r.Runs[i].Servers[k])
+					if er != nil {
+						log.Fatal("Failed to copy result of client due to -> ", er, string(ee))
+					}
+					log.Println(ee)
+				} else {
+					ee, er := exec.Command(
+						"/bin/sh", "-c",
+						fmt.Sprintf("/usr/bin/scp %s%s%s %s", r.Runs[i].Servers[k],
+							":", r.Runs[i].Server_logs[j],
+							run_dir+"/"+r.Runs[i].Server_logs[j]+"--"+r.Runs[i].Servers[k])).Output()
+					if er != nil {
+						log.Fatal("Failed to copy result of client due to -> ", er, string(ee))
+					}
+					log.Println(ee)
+				}
+			}
+		} // for_k for Servers
+	} //for_j for Server_logs
 }
 
 func (r *TheRun) monitorServer(server string, run_dir string) {
@@ -320,6 +362,12 @@ func (r *TheRun) monitorServer(server string, run_dir string) {
 		Pem_file: r.PemFile,
 		Logfile:  joinstr(run_dir, "/pidstat.log--"+server, ""),
 		Cmd:      joinstr("pidstat 1 -Ihtruwd -p", pid, " ")})
+
+	r.tasks = append(r.tasks, Task{
+		Ssh_url:  server,
+		Pem_file: r.PemFile,
+		Logfile:  joinstr(run_dir, "/iostat.log--"+server, ""),
+		Cmd:      "iostat 1"})
 
 	// r.tasks = append(r.tasks, Task{
 	// 	Ssh_url:  ssh_server,

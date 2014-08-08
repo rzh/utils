@@ -1,0 +1,13 @@
+{
+	"PemFile": "/Users/rui/bin/rui-aws-cap.pem",
+	"runs": [
+		{
+			"run_id": "conn_016",
+			"clients": ["ec2-user@54.191.61.148", "ec2-user@54.186.164.26"],
+			"client_logs": ["test.txt"],
+			"servers": ["ec2-user@54.191.61.148", "ec2-user@54.186.164.26"],
+			"server_logs": [],
+			"type"  : "hammerTime",
+			"cmd": "cat test.txt; sleep 10"
+		}
+	]}

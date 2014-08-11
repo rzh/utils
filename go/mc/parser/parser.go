@@ -7,9 +7,13 @@ import (
 	"strings"
 )
 
-func ProcessSysbenchResult(file string) (string, []string) {
+func ProcessSysbenchResult(file string) (string, []string, map[string]string) {
 	var cum string
 	var trend []string
+	att := make(map[string]string)
+
+	att["test-type"] = "sysbench"
+	att["thread"] = "64"
 
 	f, err := ioutil.ReadFile(file)
 
@@ -41,5 +45,5 @@ func ProcessSysbenchResult(file string) (string, []string) {
 			// no match, just skip
 		}
 	}
-	return cum, trend
+	return cum, trend, att
 }

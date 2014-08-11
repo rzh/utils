@@ -21,6 +21,15 @@ In order to monitor the server, you need install sysstat, which will bring in pi
 
 Nothing is required for the client
 
+# Installtion
+
+Assume you already have working go environment setup, if not, please follow the instruction http://golang.org/doc/install
+<pre>
+# go get github.com/rzh/utils/go/mc
+# go install github.com/rzh/utils/go/mc
+# mc
+</pre>
+
 # Configure Files
 Example: https://github.com/rzh/utils/blob/master/go/run/runner.json
 

@@ -7,7 +7,7 @@
 			"client_logs": ["test.txt"],
 			"servers": ["ec2-user@54.191.61.148", "ec2-user@54.186.164.26"],
 			"server_logs": [],
-			"type"  : "hammerTime",
-			"cmd": "cat test.txt; sleep 10"
+			"type"  : "sysbench",
+			"cmd": "cat test.txt; sleep 1"
 		}
 	]}

@@ -51,7 +51,19 @@ type ITask interface {
 	Cleanup()
 }
 
-// start of Task
+// definition of Stat
+
+type Stats struct {
+	TPS            string
+	Run_Date       string
+	Run_Start_Time int64 //epoch time, time.Now().Unix()
+	Run_End_Time   int64
+	ID             string
+	Type           string // hammertime, sysbench, mongo-sim
+	Hisory         []string
+}
+
+// start of definition of Task
 type Task struct {
 	Cmd_exec *exec.Cmd
 	Ssh_url  string
@@ -113,6 +125,8 @@ type HammerTask struct {
 	Server_logs []string `json:server_logs`
 
 	Type string `json:type`
+
+	Stats Stats
 }
 
 type TheRun struct {
@@ -360,13 +374,24 @@ func (r *TheRun) RunClientTasks(i int, run_dir string) {
 		} // for_k for Servers
 	} //for_j for Server_logs
 
+	r.reportResults(i, log_file)
+}
+
+func (r *TheRun) reportResults(i int, log_file string) {
 	// this is the place to analyze results.
-	switch r.Runs[i].Type {
+	t := str.ToLower(r.Runs[i].Type)
+	switch t {
 	case "sysbench":
 		log.Println("analyzing sysbench results")
-		cum, _ := parser.ProcessSysbenchResult(log_file)
+		cum, history := parser.ProcessSysbenchResult(log_file)
 
-		log.Println("\n###    final cumulative TPS is: " + cum)
+		r.Runs[i].Stats.Type = t
+		r.Runs[i].Stats.TPS = cum
+		r.Runs[i].Stats.Hisory = history
+
+		s, _ := json.MarshalIndent(r.Runs[i].Stats, "  ", "  ")
+		os.Stdout.Write(s)
+		fmt.Println("")
 	default:
 		log.Println("no type infor, ignore results analyzing")
 	}

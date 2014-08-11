@@ -27,7 +27,7 @@ import (
 	str "strings"
 	"time"
 
-	"./parser"
+	"github.com/rzh/utils/go/mc/parser"
 
 	"github.com/ActiveState/tail"
 )

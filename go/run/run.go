@@ -27,6 +27,8 @@ import (
 	str "strings"
 	"time"
 
+	"./parser"
+
 	"github.com/ActiveState/tail"
 )
 
@@ -109,6 +111,8 @@ type HammerTask struct {
 	// log files to be collected from client and server
 	Client_logs []string `json:client_logs`
 	Server_logs []string `json:server_logs`
+
+	Type string `json:type`
 }
 
 type TheRun struct {
@@ -213,6 +217,8 @@ func joinstr(s1 string, s2 string, sep string) string {
 
 func (r *TheRun) RunClientTasks(i int, run_dir string) {
 	var cmd *exec.Cmd
+
+	log.Println("\n\n>>>>>>>>>>>>\n|    start test <" + r.Runs[i].Run_id + ">\n<<<<<<<<<<<<")
 	// var cp_cmd *exec.Cmd
 
 	if len(r.Runs[i].Clients) == 0 {
@@ -265,13 +271,14 @@ func (r *TheRun) RunClientTasks(i int, run_dir string) {
 
 	err = cmd.Run()
 	if err != nil {
-		// do not quite if this hammer runs failed
+		// do not quit if this client return error code FIXME
 		// log.Fatal("Hammer client failed with -> ", err)
 	}
 
 	time.Sleep(5 * time.Second) //chill for 5 second to collect some system stats after test done
 
 	// scp file here
+	// FIXME: only take the first client for now. Don't believe we need this at all
 	for j := 0; j < len(r.Runs[i].Client_logs); j++ {
 
 		// copy client logs
@@ -352,6 +359,17 @@ func (r *TheRun) RunClientTasks(i int, run_dir string) {
 			}
 		} // for_k for Servers
 	} //for_j for Server_logs
+
+	// this is the place to analyze results.
+	switch r.Runs[i].Type {
+	case "sysbench":
+		log.Println("analyzing sysbench results")
+		cum, _ := parser.ProcessSysbenchResult(log_file)
+
+		log.Println("\n###    final cumulative TPS is: " + cum)
+	default:
+		log.Println("no type infor, ignore results analyzing")
+	}
 }
 
 func (r *TheRun) monitorServer(server string, run_dir string) {
@@ -423,7 +441,7 @@ func (r *TheRun) StopAllTasks() {
 	// clean the task array to empty
 	r.tasks = nil
 
-	// give 5 second pause
+	// give 25 second pause
 	// disable for now, FIXME
 	// time.Sleep(25 * time.Second)
 }

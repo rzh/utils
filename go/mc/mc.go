@@ -54,13 +54,14 @@ type ITask interface {
 // definition of Stat
 
 type Stats struct {
-	TPS            string
-	Run_Date       string
-	Run_Start_Time int64 //epoch time, time.Now().Unix()
-	Run_End_Time   int64
-	ID             string
-	Type           string // hammertime, sysbench, mongo-sim
-	Hisory         []string
+	TPS string
+	// Run_Date   string
+	Start_Time int64 //epoch time, time.Now().Unix()
+	End_Time   int64
+	ID         string
+	Type       string // hammertime, sysbench, mongo-sim
+	History    []string
+	Attributes map[string]interface{}
 }
 
 // start of definition of Task
@@ -283,11 +284,13 @@ func (r *TheRun) RunClientTasks(i int, run_dir string) {
 		}
 	}()
 
+	r.Runs[i].Stats.Start_Time = time.Now().Unix()
 	err = cmd.Run()
 	if err != nil {
 		// do not quit if this client return error code FIXME
 		// log.Fatal("Hammer client failed with -> ", err)
 	}
+	r.Runs[i].Stats.End_Time = time.Now().Unix()
 
 	time.Sleep(5 * time.Second) //chill for 5 second to collect some system stats after test done
 
@@ -380,14 +383,28 @@ func (r *TheRun) RunClientTasks(i int, run_dir string) {
 func (r *TheRun) reportResults(i int, log_file string) {
 	// this is the place to analyze results.
 	t := str.ToLower(r.Runs[i].Type)
+	r.Runs[i].Stats.Type = t
+	r.Runs[i].Stats.ID = r.Runs[i].Run_id
+
+	// cache run first
+	//rr, _ := json.Marshal(r.Runs[i])
+	rr := r.Runs[i]
+	r.Runs[i].Stats.Attributes = make(map[string]interface{})
+	r.Runs[i].Stats.Attributes["run-by"] = "hammer-mc"
+	r.Runs[i].Stats.Attributes["hammer-mc-cmd"] = rr
+
 	switch t {
 	case "sysbench":
 		log.Println("analyzing sysbench results")
-		cum, history := parser.ProcessSysbenchResult(log_file)
+		cum, history, att := parser.ProcessSysbenchResult(log_file)
 
-		r.Runs[i].Stats.Type = t
 		r.Runs[i].Stats.TPS = cum
-		r.Runs[i].Stats.Hisory = history
+		r.Runs[i].Stats.History = history
+
+		// merge attribute into Stats
+		for k, v := range att {
+			r.Runs[i].Stats.Attributes[k] = v
+		}
 
 		s, _ := json.MarshalIndent(r.Runs[i].Stats, "  ", "  ")
 		os.Stdout.Write(s)

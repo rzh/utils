@@ -393,7 +393,10 @@ func (r *TheRun) reportResults(run_id int, log_file string, run_dir string) {
 	rr := r.Runs[run_id]
 	r.Runs[run_id].Stats.Attributes = make(map[string]interface{})
 	r.Runs[run_id].Stats.Attributes["run-by"] = "hammer-mc"
-	r.Runs[run_id].Stats.Attributes["hammer-mc-cmd"] = rr
+	r.Runs[run_id].Stats.Attributes["hammer-mc-cmd"] = HammerTask{Run_id: rr.Run_id,
+		Cmd: rr.Cmd, Clients: rr.Clients, Servers: rr.Servers,
+		Client_logs: rr.Client_logs, Server_logs: rr.Server_logs,
+		Type: rr.Type}
 
 	switch t {
 	case "sysbench":
@@ -661,7 +664,7 @@ func main() {
 
 	r.Run(run_dir)
 
-	fmt.Println(">>> SUMMARY <<<<\n\n\n")
+	// fmt.Println(">>> SUMMARY <<<<\n\n\n")
 	// disable for now, FIXME
 	// summarizeFolder(run_dir)
 }

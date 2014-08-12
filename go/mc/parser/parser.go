@@ -18,7 +18,7 @@ func ProcessSysbenchResult(file string) (string, []string, map[string]string) {
 	f, err := ioutil.ReadFile(file)
 
 	if err != nil {
-		log.Fatal("cannot opern file " + "test.txt")
+		log.Fatal("cannot open file " + file)
 	}
 
 	lines := strings.Split(string(f), "\n")
@@ -53,11 +53,13 @@ type DataPoint struct {
 	d  string
 }
 
+type ServerStats map[string][]DataPoint
+
 // parse output from pidstat
 // return value:
 //     process string  [mongod/mongos]
 //     stats   map[string][]DataPoint
-func ParsePIDStat(file string) (string, map[string][]DataPoint) {
+func ParsePIDStat(file string) (string, ServerStats) {
 	var cpu []DataPoint
 	var mem []DataPoint
 	process := ""
@@ -65,7 +67,7 @@ func ParsePIDStat(file string) (string, map[string][]DataPoint) {
 
 	f, err := ioutil.ReadFile(file)
 	if err != nil {
-		log.Fatal("cannot opern file " + "test.txt")
+		log.Fatal("cannot open file " + file)
 	}
 
 	lines := strings.Split(string(f), "\n")
@@ -86,8 +88,8 @@ func ParsePIDStat(file string) (string, map[string][]DataPoint) {
 				}
 
 				// now take data
-				cpu = append(cpu, DataPoint{dps[0], dps[6]})
-				mem = append(mem, DataPoint{dps[0], dps[12]})
+				cpu = append(cpu, DataPoint{ts: dps[0], d: dps[6]})
+				mem = append(mem, DataPoint{ts: dps[0], d: dps[12]})
 
 				if process == "" {
 					process = dps[18]
@@ -98,5 +100,6 @@ func ParsePIDStat(file string) (string, map[string][]DataPoint) {
 
 	stats["cpu"] = cpu
 	stats["mem"] = mem
+
 	return process, stats
 }

@@ -27,6 +27,7 @@ import (
 	str "strings"
 	"time"
 
+	"github.com/kr/pretty"
 	"github.com/rzh/utils/go/mc/parser"
 
 	"github.com/ActiveState/tail"
@@ -56,12 +57,13 @@ type ITask interface {
 type Stats struct {
 	TPS string
 	// Run_Date   string
-	Start_Time int64 //epoch time, time.Now().Unix()
-	End_Time   int64
-	ID         string
-	Type       string // hammertime, sysbench, mongo-sim
-	History    []string
-	Attributes map[string]interface{}
+	Start_Time   int64 //epoch time, time.Now().Unix()
+	End_Time     int64
+	ID           string
+	Type         string // hammertime, sysbench, mongo-sim
+	History      []string
+	Server_Stats map[string]parser.ServerStats
+	Attributes   map[string]interface{}
 }
 
 // start of definition of Task
@@ -377,41 +379,61 @@ func (r *TheRun) RunClientTasks(i int, run_dir string) {
 		} // for_k for Servers
 	} //for_j for Server_logs
 
-	r.reportResults(i, log_file)
+	r.reportResults(i, log_file, run_dir)
 }
 
-func (r *TheRun) reportResults(i int, log_file string) {
+func (r *TheRun) reportResults(run_id int, log_file string, run_dir string) {
 	// this is the place to analyze results.
-	t := str.ToLower(r.Runs[i].Type)
-	r.Runs[i].Stats.Type = t
-	r.Runs[i].Stats.ID = r.Runs[i].Run_id
+	t := str.ToLower(r.Runs[run_id].Type)
+	r.Runs[run_id].Stats.Type = t
+	r.Runs[run_id].Stats.ID = r.Runs[run_id].Run_id
 
 	// cache run first
-	//rr, _ := json.Marshal(r.Runs[i])
-	rr := r.Runs[i]
-	r.Runs[i].Stats.Attributes = make(map[string]interface{})
-	r.Runs[i].Stats.Attributes["run-by"] = "hammer-mc"
-	r.Runs[i].Stats.Attributes["hammer-mc-cmd"] = rr
+	//rr, _ := json.Marshal(r.Runs[run_id])
+	rr := r.Runs[run_id]
+	r.Runs[run_id].Stats.Attributes = make(map[string]interface{})
+	r.Runs[run_id].Stats.Attributes["run-by"] = "hammer-mc"
+	r.Runs[run_id].Stats.Attributes["hammer-mc-cmd"] = rr
 
 	switch t {
 	case "sysbench":
 		log.Println("analyzing sysbench results")
 		cum, history, att := parser.ProcessSysbenchResult(log_file)
 
-		r.Runs[i].Stats.TPS = cum
-		r.Runs[i].Stats.History = history
+		r.Runs[run_id].Stats.TPS = cum
+		r.Runs[run_id].Stats.History = history
 
 		// merge attribute into Stats
 		for k, v := range att {
-			r.Runs[i].Stats.Attributes[k] = v
+			r.Runs[run_id].Stats.Attributes[k] = v
 		}
 
-		s, _ := json.MarshalIndent(r.Runs[i].Stats, "  ", "  ")
-		os.Stdout.Write(s)
-		fmt.Println("")
 	default:
 		log.Println("no type infor, ignore results analyzing")
 	}
+
+	// report pidstat here
+	r.Runs[run_id].Stats.Server_Stats = make(map[string]parser.ServerStats)
+	for k := 0; k < len(r.Runs[run_id].Servers); k++ {
+		pidfile := run_dir + "/pidstat.log--" + r.Runs[run_id].Servers[k]
+		_, stats := parser.ParsePIDStat(pidfile)
+
+		r.Runs[run_id].Stats.Server_Stats[r.Runs[run_id].Servers[k]] = make(parser.ServerStats)
+		for kk, vv := range stats {
+			// r.Runs[run_id].Stats.Server_Stats[r.Runs[run_id].Servers[k]][kk] = make([]parser.DataPoint, len(vv))
+			// log.Println("++++> ", copy(r.Runs[run_id].Stats.Server_Stats[r.Runs[run_id].Servers[k]][kk], vv))
+			//append(r.Runs[run_id].Stats.Server_Stats[r.Runs[run_id].Servers[k]][kk], vv)
+			r.Runs[run_id].Stats.Server_Stats[r.Runs[run_id].Servers[k]][kk] = vv
+		}
+	}
+
+	// print
+	/*
+		s, _ := json.MarshalIndent(r.Runs[run_id].Stats, "  ", "  ")
+		os.Stdout.Write(s)
+		fmt.Println("********")
+	*/
+	fmt.Printf("%# v", pretty.Formatter(r.Runs[run_id].Stats))
 }
 
 func (r *TheRun) monitorServer(server string, run_dir string) {
@@ -454,7 +476,7 @@ func (r *TheRun) stagingDBs() {
 }
 */
 
-func (r *TheRun) StartAllServerMonitorTasks(run_dir string, run_id int) {
+func (r *TheRun) StartAllServerMonitorTasks(run_id int, run_dir string) {
 	// first filling the tasks to monitor server,
 
 	// make sure tasks array is empty
@@ -502,7 +524,7 @@ func (r *TheRun) Run(run_dir string) {
 				log.Panicln("failed to create ", log_dir)
 			}
 
-			r.StartAllServerMonitorTasks(log_dir, i)
+			r.StartAllServerMonitorTasks(i, log_dir)
 			r.RunClientTasks(i, log_dir)
 			r.StopAllTasks()
 		}

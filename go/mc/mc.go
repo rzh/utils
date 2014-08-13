@@ -634,7 +634,7 @@ func summarizeFolder(folder string) {
 func init() {
 	flag.StringVar(&run, "run", "", "ID for the run")
 	flag.StringVar(&config, "config", "", "Config JSON for the run")
-	flag.StringVar(&test, "test", "", "Config JSON for the run")
+	flag.StringVar(&test, "test", "", "Suffix for the report folder")
 }
 
 func main() {

@@ -44,6 +44,22 @@ Assume you already have working go environment setup, if not, please follow the 
 </pre>
 
 # Configure Files
+
+<pre>
+{
+        "PemFile": "/Users/rui/bin/rui-aws-cap.pem",
+        "runs": [
+                {
+                        "run_id": "conn_016",
+                        "clients": ["ec2-user@54.191.61.148", "ec2-user@54.186.164.26"],
+                        "client_logs": ["test.txt"],
+                        "servers": ["ec2-user@54.191.61.148", "ec2-user@54.186.164.26"],
+                        "server_logs": ["./mongodb/logs/mongod.log"],
+                        "type"  : "sysbench",
+                        "cmd": "cat test.txt; sleep 10"
+                }
+        ]}
+</pre>
 Example: https://github.com/rzh/utils/blob/master/go/run/runner.json
 
 More Details TBA

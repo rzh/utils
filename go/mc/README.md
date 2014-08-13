@@ -4,6 +4,19 @@
 - _**Parser**_: to parse the output of client based on client type, the results will be send to dashboard backend once it is ready
 - All the logs will save into a fold corresponding to the test run. User can specify what logs to be pulled from each server in the JSON conf files.
 
+# What MC do?
+- Log into all _**servers**_ via ssh. Figure out pid for mongod/mongos. Start monitoring with pidstat and iostat
+- Start traffic generator from _**clients**_
+- Wait for traffic generator 
+- Stop monitor on servers. Save all monitorring log into local report folder
+- Retrieve server log into the local report folder
+- Retrieve client log into the local report folder
+- Save traffic generator screen output to the local report folder
+- Analyze traffic generator log based on client type
+- Analyze server performance monitoring log
+- Generate JSON for reporting
+- Report to the dashboard backend (not yet)
+
 # Assumptions
 - All the clients have the identical setup, that is all the log file, binaries located at the same path. You can just use the same command to start all the client. Please note, although the tool support multiple client, current only the first one is used
 - All the server to be monitored has exact one instance of mongod/mongos running.

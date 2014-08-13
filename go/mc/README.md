@@ -65,7 +65,12 @@ Example: https://github.com/rzh/utils/blob/master/go/run/runner.json
 More Details TBA
 
 # Command Line Options
-TBA
+<pre>
+Usage of ./mc:
+  -config="": Config JSON for the run
+  -run="": ID for the run
+  -test="": Suffix for the report folder
+</pre>
 
-# Add new Parser
+# How to add a new Parser
 TBA

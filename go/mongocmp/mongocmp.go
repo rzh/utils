@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"math"
 	"os"
 	"regexp"
 	"sort"
@@ -28,10 +29,14 @@ BenchmarkFannkuch11     61976254131  61972329989   -0.01%
 
 var debug = Debug("single")
 
-func parseFile(path string) map[string]float64 {
-
+// parse file
+// return:
+//   mean of data, coefficient of variation of the data
+func parseFile(path string) (map[string]float64, map[string]string) {
 	re := make(map[string]float64)
+	data := make(map[string][]float64)
 	total := make(map[string]float64)
+	cvs := make(map[string]string)
 
 	f, err := os.Open(path)
 	if err != nil {
@@ -71,6 +76,7 @@ func parseFile(path string) map[string]float64 {
 					log.Fatalln(err)
 				}
 				re[tmp_id+"_TH-"+words[0]] += f
+				data[tmp_id+"_TH-"+words[0]] = append(data[tmp_id+"_TH-"+words[0]], f)
 				total[tmp_id+"_TH-"+words[0]] += 1.0
 
 			} else {
@@ -93,8 +99,9 @@ func parseFile(path string) map[string]float64 {
 
 	for k, v := range total {
 		re[k] = re[k] / v
+		cvs[k] = cvStr(data[k])
 	}
-	return re
+	return re, cvs
 }
 
 // Percent formats a Delta as a percent change, ranging from -100% up.
@@ -106,6 +113,40 @@ func Percent(f float64) string {
 func Speedup(f float64) string {
 	return fmt.Sprintf("%.2fx", f)
 
+}
+
+// to calculate stddev
+func stdDev(numbers []float64, mean float64) float64 {
+	total := 0.0
+	for _, number := range numbers {
+		total += math.Pow(number-mean, 2)
+	}
+	variance := total / float64(len(numbers)-1)
+	return math.Sqrt(variance)
+}
+
+// to calculate cv (coefficient of variation) in percentage
+func cvStr(data []float64) string {
+	var stddev float64 = 0
+	var mean float64 = 0.0
+	var total float64 = 0.0
+
+	if len(data) == 0 {
+		return "Error, no data for cvStr"
+	} else if len(data) == 1 {
+		return "n/a"
+	}
+
+	// find mean first
+	for _, n := range data {
+		total += n
+	}
+
+	mean = total / float64(len(data))
+
+	stddev = stdDev(data, mean)
+
+	return fmt.Sprintf("%.2f%%", 100.0*stddev/mean)
 }
 
 func main() {
@@ -124,8 +165,8 @@ func main() {
 	w.Init(os.Stdout, 0, 0, 5, ' ', 0)
 	defer w.Flush()
 
-	before := parseFile(flag.Arg(0))
-	after := parseFile(flag.Arg(1))
+	before, before_cvs := parseFile(flag.Arg(0))
+	after, after_cvs := parseFile(flag.Arg(1))
 
 	fmt.Printf("# baseline : %s\n# new results : %s\n", flag.Arg(0), flag.Arg(1))
 	// fmt.Fprint(w, "\nbenchmark\tbaseline OP/s\tnew OP/s\tspeedup\n")
@@ -142,10 +183,10 @@ func main() {
 		v := after[keys[i]]
 		if _, ok := before[k]; ok {
 			// has baseline
-			fmt.Fprintf(w, "%s\t%.2f\t%.2f\t%s\n", k, before[k], v, Percent(v/before[k]))
+			fmt.Fprintf(w, "%s\t%.2f[%s]\t%.2f[%s]\t%s\n", k, before[k], before_cvs[k], v, after_cvs[keys[i]], Percent(v/before[k]))
 		} else {
 			// no baseline
-			fmt.Fprintf(w, "%s\t%s\t%d\t%s\n", k, "n/a", v, Percent(0.0))
+			fmt.Fprintf(w, "%s\t%s\t%f[%s]\t%s\n", k, "n/a", v, "["+after_cvs[keys[i]]+"]", Percent(0.0))
 		}
 	}
 }

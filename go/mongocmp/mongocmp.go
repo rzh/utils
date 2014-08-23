@@ -150,6 +150,9 @@ func cvStr(data []float64) string {
 }
 
 func main() {
+	var (
+		wiki = flag.Bool("wiki", false, "print wiki/jira ready table")
+	)
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "usage: %s old.txt new.txt\n\n", os.Args[0])
 		flag.PrintDefaults()
@@ -168,10 +171,13 @@ func main() {
 	before, before_cvs := parseFile(flag.Arg(0))
 	after, after_cvs := parseFile(flag.Arg(1))
 
-	fmt.Printf("# baseline : %s\n# new results : %s\n", flag.Arg(0), flag.Arg(1))
-	// fmt.Fprint(w, "\nbenchmark\tbaseline OP/s\tnew OP/s\tspeedup\n")
-	fmt.Fprint(w, "benchmark\told ns/op\tnew ns/op\tdelta\n")
-
+	if !*wiki {
+		fmt.Printf("# baseline : %s\n# new results : %s\n", flag.Arg(0), flag.Arg(1))
+		// fmt.Fprint(w, "\nbenchmark\tbaseline OP/s\tnew OP/s\tspeedup\n")
+		fmt.Fprint(w, "benchmark\told ns/op\tnew ns/op\tdelta\n")
+	} else {
+		fmt.Fprint(w, "||benchmark\t||baseline ns/op\t||cv baseline\t||new ns/op\t||cv new\t||delta|\n")
+	}
 	keys := make([]string, 0, len(after))
 	for key := range after {
 		keys = append(keys, key)
@@ -183,10 +189,48 @@ func main() {
 		v := after[keys[i]]
 		if _, ok := before[k]; ok {
 			// has baseline
-			fmt.Fprintf(w, "%s\t%.2f[%s]\t%.2f[%s]\t%s\n", k, before[k], before_cvs[k], v, after_cvs[keys[i]], Percent(v/before[k]))
+
+			if !*wiki {
+				fmt.Fprintf(w, "%s\t%.2f[%s]\t%.2f[%s]\t%s\n", k, before[k], before_cvs[k], v, after_cvs[keys[i]], Percent(v/before[k]))
+			} else {
+				var color_delta_start, color_delta_end string
+				var color_cv_new_start, color_cv_new_end string
+				var color_cv_old_start, color_cv_old_end string
+
+				if (v/before[k] - 1) < -0.05 {
+					// if delta is < 5%, make it red for wiki
+					color_delta_start = "{color:red}"
+					color_delta_end = "{color}"
+				}
+
+				if f, err := strconv.ParseFloat(after_cvs[keys[i]][0:len(after_cvs[keys[i]])-2], 64); err == nil && f > 3.0 {
+					color_cv_new_start = "{color:orange}"
+					color_cv_new_end = "{color}"
+				}
+
+				if f, err := strconv.ParseFloat(before_cvs[keys[i]][0:len(before_cvs[keys[i]])-2], 64); err == nil && f > 3.0 {
+					color_cv_old_start = "{color:orange}"
+					color_cv_old_end = "{color}"
+				}
+
+				fmt.Fprintf(w, "||%s\t|%.2f\t|%s%s%s\t|%.2f\t|%s%s%s\t|%s%s%s|\n",
+					k, before[k],
+					color_cv_old_start,
+					before_cvs[k],
+					color_cv_old_end,
+					v,
+					color_cv_new_start,
+					after_cvs[keys[i]],
+					color_cv_new_end,
+					color_delta_start, Percent(v/before[k]), color_delta_end)
+			}
 		} else {
 			// no baseline
-			fmt.Fprintf(w, "%s\t%s\t%f[%s]\t%s\n", k, "n/a", v, "["+after_cvs[keys[i]]+"]", Percent(0.0))
+			if !*wiki {
+				fmt.Fprintf(w, "%s\t%s\t%f[%s]\t%s\n", k, "n/a", v, "["+after_cvs[keys[i]]+"]", Percent(0.0))
+			} else {
+				fmt.Fprintf(w, "||%s\t|%s\t|%f\t|%s\t|%s|\n", k, "n/a", v, "["+after_cvs[keys[i]]+"]", Percent(0.0))
+			}
 		}
 	}
 }

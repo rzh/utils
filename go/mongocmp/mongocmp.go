@@ -31,12 +31,14 @@ var debug = Debug("single")
 
 // parse file
 // return:
-//   mean of data, coefficient of variation of the data
-func parseFile(path string) (map[string]float64, map[string]string) {
+//   mean of data, coefficient of variation of the data, log info
+func parseFile(path string) (map[string]float64, map[string]string, string) {
 	re := make(map[string]float64)
 	data := make(map[string][]float64)
 	total := make(map[string]float64)
 	cvs := make(map[string]string)
+	sha := "" // db_version, git_sha
+	db_version := ""
 
 	f, err := os.Open(path)
 	if err != nil {
@@ -49,6 +51,31 @@ func parseFile(path string) (map[string]float64, map[string]string) {
 
 	for scan.Scan() {
 		debug("scan line :%s", scan.Text())
+
+		// check whether it is db version
+		// format:
+		//    db version: 2.7.5
+
+		if match, err := regexp.MatchString("^db version: [0-9.]+$", scan.Text()); match && err == nil {
+			// found db version
+
+			if db_version == "" {
+				db_version = scan.Text()
+			} else {
+				// make db_version is the same
+				if db_version != scan.Text() {
+					log.Fatalln("DB version is different from log file. Got " + db_version + " and " + scan.Text())
+				}
+			}
+
+			// get next line, it should be SHA
+			if scan.Scan() {
+				sha = scan.Text()
+			}
+
+			continue
+		}
+
 		if tmp_id == "" {
 			match, err := regexp.MatchString("^[a-zA-Z.0-9]+$", scan.Text())
 
@@ -101,7 +128,7 @@ func parseFile(path string) (map[string]float64, map[string]string) {
 		re[k] = re[k] / v
 		cvs[k] = cvStr(data[k])
 	}
-	return re, cvs
+	return re, cvs, db_version + " | SHA: " + sha
 }
 
 // Percent formats a Delta as a percent change, ranging from -100% up.
@@ -168,11 +195,11 @@ func main() {
 	w.Init(os.Stdout, 0, 0, 5, ' ', 0)
 	defer w.Flush()
 
-	before, before_cvs := parseFile(flag.Arg(0))
-	after, after_cvs := parseFile(flag.Arg(1))
+	before, before_cvs, before_info := parseFile(flag.Arg(0))
+	after, after_cvs, after_info := parseFile(flag.Arg(1))
 
 	if !*wiki {
-		fmt.Printf("# baseline : %s\n# new results : %s\n", flag.Arg(0), flag.Arg(1))
+		fmt.Printf("# baseline : %s\n# new results : %s\n", flag.Arg(0)+" ["+after_info+"]", flag.Arg(1)+" ["+before_info+"]")
 		// fmt.Fprint(w, "\nbenchmark\tbaseline OP/s\tnew OP/s\tspeedup\n")
 		fmt.Fprint(w, "benchmark\told ns/op\tnew ns/op\tdelta\n")
 	} else {

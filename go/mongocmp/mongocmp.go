@@ -27,7 +27,7 @@ BenchmarkBinaryTree17  131488202467 112637283111  -14.34%
 BenchmarkFannkuch11     61976254131  61972329989   -0.01%
 `
 
-var debug = Debug("single")
+var debug = Debug("info")
 
 // parse file
 // return:
@@ -102,9 +102,17 @@ func parseFile(path string) (map[string]float64, map[string]string, string) {
 				if err != nil {
 					log.Fatalln(err)
 				}
-				re[tmp_id+"_TH-"+words[0]] += f
-				data[tmp_id+"_TH-"+words[0]] = append(data[tmp_id+"_TH-"+words[0]], f)
-				total[tmp_id+"_TH-"+words[0]] += 1.0
+
+				t, e := strconv.ParseInt(words[0], 10, 64)
+
+				if e != nil {
+					log.Fatalln("Error parsing line ", scan.Text(), " with error ", e)
+				}
+				debug("parsing thread count, which is %3d\n", t)
+				th := fmt.Sprintf("%03d", t)
+				re[tmp_id+"_TH-"+th] += f
+				data[tmp_id+"_TH-"+th] = append(data[tmp_id+"_TH-"+th], f)
+				total[tmp_id+"_TH-"+th] += 1.0
 
 			} else {
 				match, err := regexp.MatchString("^[a-zA-Z.0-9]+$", scan.Text())
@@ -198,6 +206,12 @@ func main() {
 	before, before_cvs, before_info := parseFile(flag.Arg(0))
 	after, after_cvs, after_info := parseFile(flag.Arg(1))
 
+	/*
+		for t1, t2 := range before {
+			fmt.Println(t1, "\t\t", t2)
+		}
+	*/
+
 	if !*wiki {
 		fmt.Printf("# baseline : %s\n# new results : %s\n", flag.Arg(0)+" ["+after_info+"]", flag.Arg(1)+" ["+before_info+"]")
 		// fmt.Fprint(w, "\nbenchmark\tbaseline OP/s\tnew OP/s\tspeedup\n")
@@ -254,9 +268,9 @@ func main() {
 		} else {
 			// no baseline
 			if !*wiki {
-				fmt.Fprintf(w, "%s\t%s\t%f[%s]\t%s\n", k, "n/a", v, "["+after_cvs[keys[i]]+"]", Percent(0.0))
+				fmt.Fprintf(w, "%s\t%s\t%f[%s]\t%s\n", k, "n/a", v, after_cvs[keys[i]], "n/a")
 			} else {
-				fmt.Fprintf(w, "||%s\t|%s\t|%f\t|%s\t|%s|\n", k, "n/a", v, "["+after_cvs[keys[i]]+"]", Percent(0.0))
+				fmt.Fprintf(w, "||%s\t|%s\t|%f\t|%s\t|%s|\n", k, "n/a", v, "["+after_cvs[keys[i]]+"]", "n/a")
 			}
 		}
 	}

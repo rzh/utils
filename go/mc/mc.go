@@ -52,6 +52,13 @@ type ITask interface {
 	Cleanup()
 }
 
+// definition of processes
+type Process struct {
+	Pid  string // pid
+	Name string // executable name, mongod or mongos
+	Cmd  string // how this is runned
+}
+
 // definition of Stat
 
 type Stats struct {

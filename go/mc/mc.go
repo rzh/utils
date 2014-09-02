@@ -39,9 +39,10 @@ var (
 	ssh_hammer string
 	pem_file   string
 	// run_id     string
-	run    string
-	config string
-	test   string
+	run        string
+	config     string
+	test       string
+	report_url string
 )
 
 const report_folder string = "reports"
@@ -635,6 +636,7 @@ func init() {
 	flag.StringVar(&run, "run", "", "ID for the run")
 	flag.StringVar(&config, "config", "", "Config JSON for the run")
 	flag.StringVar(&test, "test", "", "Suffix for the report folder")
+	flag.StringVar(&report_url, "rurl", "http://localhost/submit_result", "URL to report test results")
 }
 
 func main() {

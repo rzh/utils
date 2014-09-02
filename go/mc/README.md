@@ -4,7 +4,7 @@
 - _**Parser**_: to parse the output of client based on client type, the results will be send to dashboard backend once it is ready
 - All the logs will save into a fold corresponding to the test run. User can specify what logs to be pulled from each server in the JSON conf files.
 
-# What MC do?
+# What
 - Log into all _**servers**_ via ssh. Figure out pid for mongod/mongos. Start monitoring with pidstat and iostat
 - Start traffic generator from _**clients**_
 - Wait for traffic generator 

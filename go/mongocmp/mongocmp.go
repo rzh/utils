@@ -77,7 +77,7 @@ func parseFile(path string) (map[string]float64, map[string]string, string) {
 		}
 
 		if tmp_id == "" {
-			match, err := regexp.MatchString("^[a-zA-Z.0-9]+$", scan.Text())
+			match, err := regexp.MatchString("^[a-zA-Z.0-9_-]+$", scan.Text())
 
 			if match && err == nil {
 				// this potential could be an id
@@ -189,7 +189,7 @@ func main() {
 		wiki = flag.Bool("wiki", false, "print wiki/jira ready table")
 	)
 	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr, "usage: %s old.txt new.txt\n\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "usage: \n  %s old.txt new.txt\n  %s -wiki=true baseline.txt new.txt\n", os.Args[0], os.Args[0])
 		flag.PrintDefaults()
 		fmt.Fprint(os.Stderr, usageFooter)
 		os.Exit(2)
@@ -203,36 +203,34 @@ func main() {
 	w.Init(os.Stdout, 0, 0, 5, ' ', 0)
 	defer w.Flush()
 
-	before, before_cvs, before_info := parseFile(flag.Arg(0))
-	after, after_cvs, after_info := parseFile(flag.Arg(1))
+	after := make([]map[string]float64, flag.NArg()-1)
+	after_cvs := make([]map[string]string, flag.NArg()-1)
+	after_info := make([]string, flag.NArg()-1)
 
-	/*
-		for t1, t2 := range before {
-			fmt.Println(t1, "\t\t", t2)
-		}
-	*/
+	before, before_cvs, before_info := parseFile(flag.Arg(0))
+	after[0], after_cvs[0], after_info[0] = parseFile(flag.Arg(1))
 
 	if !*wiki {
-		fmt.Printf("# baseline : %s\n# new results : %s\n", flag.Arg(0)+" ["+after_info+"]", flag.Arg(1)+" ["+before_info+"]")
+		fmt.Printf("# baseline : %s\n# new results : %s\n", flag.Arg(0)+" ["+after_info[0]+"]", flag.Arg(1)+" ["+before_info+"]")
 		// fmt.Fprint(w, "\nbenchmark\tbaseline OP/s\tnew OP/s\tspeedup\n")
 		fmt.Fprint(w, "benchmark\told ns/op\tnew ns/op\tdelta\n")
 	} else {
 		fmt.Fprint(w, "||benchmark\t||baseline ns/op\t||cv baseline\t||new ns/op\t||cv new\t||delta|\n")
 	}
 	keys := make([]string, 0, len(after))
-	for key := range after {
+	for key := range after[0] {
 		keys = append(keys, key)
 	}
 	sort.Strings(keys)
 
 	for i := range keys {
 		k := keys[i]
-		v := after[keys[i]]
+		v := after[0][keys[i]]
 		if _, ok := before[k]; ok {
 			// has baseline
 
 			if !*wiki {
-				fmt.Fprintf(w, "%s\t%.2f[%s]\t%.2f[%s]\t%s\n", k, before[k], before_cvs[k], v, after_cvs[keys[i]], Percent(v/before[k]))
+				fmt.Fprintf(w, "%s\t%.2f[%s]\t%.2f[%s]\t%s\n", k, before[k], before_cvs[k], v, after_cvs[0][keys[i]], Percent(v/before[k]))
 			} else {
 				var color_delta_start, color_delta_end string
 				var color_cv_new_start, color_cv_new_end string
@@ -244,7 +242,7 @@ func main() {
 					color_delta_end = "{color}"
 				}
 
-				if f, err := strconv.ParseFloat(after_cvs[keys[i]][0:len(after_cvs[keys[i]])-2], 64); err == nil && f > 3.0 {
+				if f, err := strconv.ParseFloat(after_cvs[0][keys[i]][0:len(after_cvs[0][keys[i]])-2], 64); err == nil && f > 3.0 {
 					color_cv_new_start = "{color:orange}"
 					color_cv_new_end = "{color}"
 				}
@@ -261,16 +259,16 @@ func main() {
 					color_cv_old_end,
 					v,
 					color_cv_new_start,
-					after_cvs[keys[i]],
+					after_cvs[0][keys[i]],
 					color_cv_new_end,
 					color_delta_start, Percent(v/before[k]), color_delta_end)
 			}
 		} else {
 			// no baseline
 			if !*wiki {
-				fmt.Fprintf(w, "%s\t%s\t%f[%s]\t%s\n", k, "n/a", v, after_cvs[keys[i]], "n/a")
+				fmt.Fprintf(w, "%s\t%s\t%f[%s]\t%s\n", k, "n/a", v, after_cvs[0][keys[i]], "n/a")
 			} else {
-				fmt.Fprintf(w, "||%s\t|%s\t|%f\t|%s\t|%s|\n", k, "n/a", v, "["+after_cvs[keys[i]]+"]", "n/a")
+				fmt.Fprintf(w, "||%s\t|%s\t|%f\t|%s\t|%s|\n", k, "n/a", v, "["+after_cvs[0][keys[i]]+"]", "n/a")
 			}
 		}
 	}

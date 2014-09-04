@@ -69,7 +69,7 @@ func ProcessSysbenchResult(file string) (string, []string, map[string]string) {
 
 	lines := strings.Split(string(f), "\n")
 
-	re := regexp.MustCompile("seconds : cum tps=([0-9.]+) : int tps=([0-9.]+) : cum ips=[0-9.]+ : int ips=[0-9.]+")
+	re := regexp.MustCompile("seconds : cum tps=([0-9.,]+) : int tps=([0-9.,]+) : cum ips=[0-9.,]+ : int ips=[0-9.,]+")
 
 	// find the cumulative number
 	for i := len(lines) - 1; i >= 0; i-- {

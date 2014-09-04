@@ -33,3 +33,14 @@ func TestParsePIDStat(t *testing.T) {
 		t.Error("Pidstat mem[1] is " + dps["mem"][1].d + " expecting 23.29")
 	}
 }
+
+func TestParseMongoSIMStat(t *testing.T) {
+	r := ProcessMongoSIMResult("mongo-sim.txt")
+
+	if r.AllNodes.Op_per_second != 0 {
+		t.Error("mongo-sim op_per_second is ", r.AllNodes.Op_per_second, ", expecting 0")
+	}
+	if r.Nodes[0]["st_staging_minutes"].Op_count != 43500 {
+		t.Error("mongo-sim op_per_second is ", r.Nodes[0]["st_staging_minutes"].Op_count, ", expecting 100")
+	}
+}

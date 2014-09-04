@@ -1,11 +1,57 @@
 package parser
 
 import (
+	"encoding/json"
 	"io/ioutil"
 	"log"
 	"regexp"
 	"strings"
 )
+
+type NodeStats struct {
+	Total_time_micros    int64   `json:"total_time_micros"`
+	Op_per_second        float64 `json:"op_per_second"`
+	Op_count             int64   `json:"op_count"`
+	Op_errors            int64   `json:"op_errors"`
+	Op_retries           int64   `json:"op_retries"`
+	Op_retry_time_micros int64   `json:"op_retry_time_micros"`
+	Op_median            int64   `json:"op_median"`
+	Op_lat_avg_micros    int64   `json:"op_lat_avg_micros"`
+	Op_lat_min_micros    int64   `json:"op_lat_min_micros"`
+	Op_lat_max_micros    int64   `json:"op_lat_max_micros"`
+	Op_lat_variance      int64   `json:"op_lat_variance"`
+	Op_lat_avg_95th      int64   `json:"op_lat_avg_95th"`
+	Op_lat_avg_99th      int64   `json:"op_lat_avg_99th"`
+	Op_lat_total_micros  int64   `json:"op_lat_total_micros"`
+}
+
+type StatsSummary struct {
+	AllNodes NodeStats              `json:"all_nodes"`
+	Nodes    []map[string]NodeStats `json:"nodes"`
+}
+
+func ProcessMongoSIMResult(file string) StatsSummary {
+	result := StatsSummary{}
+
+	f, err := ioutil.ReadFile(file)
+
+	if err != nil {
+		log.Fatal("cannot open file " + file)
+	}
+
+	lines := strings.Split(string(f), "\n")
+	re := regexp.MustCompile("==== final metrics ====")
+
+	for i := len(lines) - 1; i >= 0; i-- {
+		if re.MatchString(lines[i]) {
+			json.Unmarshal([]byte(lines[i+1]), &result)
+
+			return result
+		}
+	}
+
+	return StatsSummary{AllNodes: NodeStats{Op_per_second: 100}}
+}
 
 func ProcessSysbenchResult(file string) (string, []string, map[string]string) {
 	var cum string

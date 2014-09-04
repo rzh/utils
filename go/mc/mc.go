@@ -27,10 +27,8 @@ import (
 	str "strings"
 	"time"
 
-	"github.com/kr/pretty"
-	"github.com/rzh/utils/go/mc/parser"
-
 	"github.com/ActiveState/tail"
+	"github.com/kr/pretty"
 )
 
 var (
@@ -58,20 +56,6 @@ type Process struct {
 	Pid  string // pid
 	Name string // executable name, mongod or mongos
 	Cmd  string // how this is runned
-}
-
-// definition of Stat
-
-type Stats struct {
-	TPS string
-	// Run_Date   string
-	Start_Time   int64 //epoch time, time.Now().Unix()
-	End_Time     int64
-	ID           string
-	Type         string // hammertime, sysbench, mongo-sim
-	History      []string
-	Server_Stats map[string]parser.ServerStats
-	Attributes   map[string]interface{}
 }
 
 // start of definition of Task
@@ -186,31 +170,75 @@ func (r *TheRun) findMongoD_CMD(server string) string {
 	return ""
 }
 
+type mongodBuildInfo struct {
+	Version          string `json:"version"` //     "version" : "2.6.4",
+	GitVersion       string `json:"gitVersion"`
+	OpenSSLVersion   string `json:"OpenSSLVersion"`
+	SysInfo          string `json:"sysInfo"`
+	LoaderFlags      string `json:"loaderFlags"`
+	CompilterFlags   string `json:"compilerFlags"`
+	Allocator        string `json:"allocator"`
+	JavascriptEngine string `json:"javascriptEngine"`
+	Bits             int    `json:"bits"`
+	Debug            bool   `json:"debug"`
+}
+
+func (r *TheRun) findMongoD_Info(run_id int) mongodBuildInfo {
+	var buildInfo mongodBuildInfo
+
+	var server string
+
+	if len(r.Runs[0].Servers) > 0 {
+		server = r.Runs[run_id].Servers[0]
+	} else {
+		server = ""
+	}
+
+	// FIXME: need find where is mongo executable here. right not, just use a symbol link.
+	output, err := r.runServerCmd(server,
+		"./mongo --norc --eval \"print('serverBuildInfo');printjson(db.serverBuildInfo())\"")
+
+	if err != nil {
+		log.Panicln("Failed to find serverBuildInfo for server [", server, "] with error [", err, "]")
+	}
+
+	lines := str.Split(string(output), "\n")
+
+	err = json.Unmarshal([]byte(str.Join(lines[3:], "\n")), &buildInfo)
+	if err != nil {
+		log.Panicln("Cannot unmarshal serverBuildInfo with error: ", err)
+	}
+
+	fmt.Printf("%# v\n", pretty.Formatter(buildInfo))
+	return buildInfo
+}
+
 func (r *TheRun) findMongoD_PID(server string) string {
 	// find out mongod pid
 	var err error
 	var _pid []byte
 
-	if r.PemFile != "" {
-		_pid, err = exec.Command(
-			"/usr/bin/ssh",
-			"-i", r.PemFile,
-			server,
-			"/bin/ps -e | grep mongod | grep -v grep | awk '{print $1}'").Output()
-	} else {
-		_pid, err = exec.Command(
-			"/usr/bin/ssh",
-			server,
-			"/bin/ps -e | grep mongod | grep -v grep | awk '{print $1}'").Output()
-	}
+	_pid, err = r.runServerCmd(server, "/bin/pidof mongod")
+	/*
+		if r.PemFile != "" {
+			_pid, err = exec.Command(
+				"/usr/bin/ssh",
+				"-i", r.PemFile,
+				server,
+				"/bin/ps -e | grep mongod | grep -v grep | awk '{print $1}'").Output()
+		} else {
+			_pid, err = exec.Command(
+				"/usr/bin/ssh",
+				server,
+				"/bin/ps -e | grep mongod | grep -v grep | awk '{print $1}'").Output()
+		}
+	*/
 
 	// exec.Command("/bin/sh", "-c", "/bin/ps -e | grep mongod | grep -v grep | awk '{print $1}'").Output()
 
 	if err != nil {
 		log.Fatalln("error getting MongoD PID: ", err)
 	}
-
-	fmt.Println("PD is |", string(_pid[:len(_pid)-1]), "|")
 
 	pid, err := strconv.Atoi(string(_pid[:len(_pid)-1]))
 
@@ -245,6 +273,13 @@ func (r *TheRun) RunClientTasks(i int, run_dir string) {
 
 	log.Println("\n\n>>>>>>>>>>>>\n|    start test <" + r.Runs[i].Run_id + ">\n<<<<<<<<<<<<")
 	// var cp_cmd *exec.Cmd
+
+	// first try to find out server buildInfo
+	buildInfo := r.findMongoD_Info(i)
+
+	r.Runs[i].Stats.ServerVersion = buildInfo.Version
+	r.Runs[i].Stats.ServerGitSHA = buildInfo.GitVersion
+	r.Runs[i].Stats.Attributes = make(map[string]interface{})
 
 	if len(r.Runs[i].Clients) == 0 {
 		// local
@@ -388,63 +423,6 @@ func (r *TheRun) RunClientTasks(i int, run_dir string) {
 	} //for_j for Server_logs
 
 	r.reportResults(i, log_file, run_dir)
-}
-
-func (r *TheRun) reportResults(run_id int, log_file string, run_dir string) {
-	// this is the place to analyze results.
-	t := str.ToLower(r.Runs[run_id].Type)
-	r.Runs[run_id].Stats.Type = t
-	r.Runs[run_id].Stats.ID = r.Runs[run_id].Run_id
-
-	// cache run first
-	//rr, _ := json.Marshal(r.Runs[run_id])
-	rr := r.Runs[run_id]
-	r.Runs[run_id].Stats.Attributes = make(map[string]interface{})
-	r.Runs[run_id].Stats.Attributes["run-by"] = "hammer-mc"
-	r.Runs[run_id].Stats.Attributes["hammer-mc-cmd"] = HammerTask{Run_id: rr.Run_id,
-		Cmd: rr.Cmd, Clients: rr.Clients, Servers: rr.Servers,
-		Client_logs: rr.Client_logs, Server_logs: rr.Server_logs,
-		Type: rr.Type}
-
-	switch t {
-	case "sysbench":
-		log.Println("analyzing sysbench results")
-		cum, history, att := parser.ProcessSysbenchResult(log_file)
-
-		r.Runs[run_id].Stats.TPS = cum
-		r.Runs[run_id].Stats.History = history
-
-		// merge attribute into Stats
-		for k, v := range att {
-			r.Runs[run_id].Stats.Attributes[k] = v
-		}
-
-	default:
-		log.Println("no type infor, ignore results analyzing")
-	}
-
-	// report pidstat here
-	r.Runs[run_id].Stats.Server_Stats = make(map[string]parser.ServerStats)
-	for k := 0; k < len(r.Runs[run_id].Servers); k++ {
-		pidfile := run_dir + "/pidstat.log--" + r.Runs[run_id].Servers[k]
-		_, stats := parser.ParsePIDStat(pidfile)
-
-		r.Runs[run_id].Stats.Server_Stats[r.Runs[run_id].Servers[k]] = make(parser.ServerStats)
-		for kk, vv := range stats {
-			// r.Runs[run_id].Stats.Server_Stats[r.Runs[run_id].Servers[k]][kk] = make([]parser.DataPoint, len(vv))
-			// log.Println("++++> ", copy(r.Runs[run_id].Stats.Server_Stats[r.Runs[run_id].Servers[k]][kk], vv))
-			//append(r.Runs[run_id].Stats.Server_Stats[r.Runs[run_id].Servers[k]][kk], vv)
-			r.Runs[run_id].Stats.Server_Stats[r.Runs[run_id].Servers[k]][kk] = vv
-		}
-	}
-
-	// print
-	/*
-		s, _ := json.MarshalIndent(r.Runs[run_id].Stats, "  ", "  ")
-		os.Stdout.Write(s)
-		fmt.Println("********")
-	*/
-	fmt.Printf("%# v", pretty.Formatter(r.Runs[run_id].Stats))
 }
 
 func (r *TheRun) monitorServer(server string, run_dir string) {
@@ -643,7 +621,7 @@ func init() {
 	flag.StringVar(&run, "run", "", "ID for the run")
 	flag.StringVar(&config, "config", "", "Config JSON for the run")
 	flag.StringVar(&test, "test", "", "Suffix for the report folder")
-	flag.StringVar(&report_url, "rurl", "http://localhost/submit_result", "URL to report test results")
+	flag.StringVar(&report_url, "rurl", "", "URL to report test results")
 }
 
 func main() {

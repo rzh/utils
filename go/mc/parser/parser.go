@@ -59,7 +59,7 @@ func ProcessSysbenchResult(file string) (string, []string, map[string]string) {
 	att := make(map[string]string)
 
 	att["test-type"] = "sysbench"
-	att["thread"] = "64"
+	// att["nThread"] = "64"
 
 	f, err := ioutil.ReadFile(file)
 
@@ -68,6 +68,36 @@ func ProcessSysbenchResult(file string) (string, []string, map[string]string) {
 	}
 
 	lines := strings.Split(string(f), "\n")
+
+	// find thread in this format : writer threads           = 64
+
+	find_parameter := func(lines []string, pattern string) string {
+		var re string
+		re_thread := regexp.MustCompile(pattern)
+
+		for i := 0; i < len(lines); i++ {
+			t := re_thread.FindStringSubmatch(lines[i])
+
+			if len(t) > 0 {
+				if re == "" || re == lines[i] {
+					re = t[1]
+				} else {
+					log.Panicln("[sysbecn-parser] Found different writer threads number: ", lines[i], " vs ", re)
+				}
+			}
+		}
+
+		if re == "" {
+			log.Panicf("Failed to find value for regexp: %s", pattern)
+		}
+		return re
+	}
+
+	att["nThreads"] = find_parameter(lines, "writer threads[ ]+= ([0-9]+)")
+	att["nCollections"] = find_parameter(lines, "collections[ ]+= ([0-9]+)")
+	att["nCollectionSize"] = find_parameter(lines, "documents per collection[ ]+= ([0-9,]+)")
+	att["nFeedbackSeconds"] = find_parameter(lines, "feedback seconds[ ]+= ([0-9]+)")
+	att["nRunSeconds"] = find_parameter(lines, "run seconds[ ]+= ([0-9]+)")
 
 	re := regexp.MustCompile("seconds : cum tps=([0-9.,]+) : int tps=([0-9.,]+) : cum ips=[0-9.,]+ : int ips=[0-9.,]+")
 

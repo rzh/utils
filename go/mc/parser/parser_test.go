@@ -19,6 +19,41 @@ func TestProcessSysbenchResult(t *testing.T) {
 	if att["test-type"] != "sysbench" {
 		t.Error("Attribute[\"test-type\"] is %v, want sysbench", att["test-type"])
 	}
+
+	// Thread[main,5,main]  writer threads           = 64
+	if att["nThreads"] != "64" {
+		t.Errorf("Attribute[nThreads] is %s, want 64", att["nThreads"])
+	}
+
+	// Thread[main,5,main]  collections              = 15
+	if att["nCollections"] != "15" {
+		t.Errorf("Attribute[nCollections] is %s, want 15", att["nCollections"])
+	}
+
+	// Thread[main,5,main]  documents per collection = 1,000,000
+	if att["nCollectionSize"] != "1,000,000" {
+		t.Errorf("Attribute[nCollectionSize] is %s, want 1,000,000", att["nCollectionSize"])
+	}
+
+	// Thread[main,5,main]  feedback seconds         = 10
+	if att["nFeedbackSeconds"] != "10" {
+		t.Errorf("Attribute[nFeedbackSeconds] is %s, want 10", att["nFeedbackSeconds"])
+	}
+
+	// Thread[main,5,main]  run seconds              = 600
+	if att["nRunSeconds"] != "600" {
+		t.Errorf("Attribute[nRunSeconds] is %s, want 600", att["nRunSeconds"])
+	}
+
+	// Thread[main,5,main]  oltp range size          = 100
+	// Thread[main,5,main]  oltp point selects       = 10
+	// Thread[main,5,main]  oltp simple ranges       = 1
+	// Thread[main,5,main]  oltp sum ranges          = 1
+	// Thread[main,5,main]  oltp order ranges        = 1
+	// Thread[main,5,main]  oltp distinct ranges     = 1
+	// Thread[main,5,main]  oltp index updates       = 1
+	// Thread[main,5,main]  oltp non index updates   = 1
+	// Thread[main,5,main]  write concern            = SAFE
 }
 
 func TestParsePIDStat(t *testing.T) {

@@ -46,14 +46,49 @@ func TestProcessSysbenchResult(t *testing.T) {
 	}
 
 	// Thread[main,5,main]  oltp range size          = 100
+	if att["oltp range size"] != "100" {
+		t.Errorf("Attribute[oltp range size] is %s, want 600", att["oltp range size"])
+	}
+
 	// Thread[main,5,main]  oltp point selects       = 10
-	// Thread[main,5,main]  oltp simple ranges       = 1
-	// Thread[main,5,main]  oltp sum ranges          = 1
-	// Thread[main,5,main]  oltp order ranges        = 1
-	// Thread[main,5,main]  oltp distinct ranges     = 1
-	// Thread[main,5,main]  oltp index updates       = 1
-	// Thread[main,5,main]  oltp non index updates   = 1
+	if att["oltp point selects"] != "10" {
+		t.Errorf("Attribute[oltp point selects] is %s, want 600", att["oltp point selects"])
+	}
+
+	// Thread[main,5,main]  oltp simple ranges       = 11
+	if att["oltp simple ranges"] != "11" {
+		t.Errorf("Attribute[oltp simple ranges] is %s, want 600", att["oltp simple ranges"])
+	}
+
+	// Thread[main,5,main]  oltp sum ranges          = 12
+	if att["oltp sum ranges"] != "12" {
+		t.Errorf("Attribute[oltp sum ranges] is %s, want 600", att["oltp sum ranges"])
+	}
+
+	// Thread[main,5,main]  oltp order ranges        = 13
+	if att["oltp order ranges"] != "13" {
+		t.Errorf("Attribute[oltp order ranges] is %s, want 600", att["oltp order ranges"])
+	}
+
+	// Thread[main,5,main]  oltp distinct ranges     = 14
+	if att["oltp distinct ranges"] != "14" {
+		t.Errorf("Attribute[oltp distinct ranges] is %s, want 600", att["oltp distinct ranges"])
+	}
+
+	// Thread[main,5,main]  oltp index updates       = 15
+	if att["oltp index updates"] != "15" {
+		t.Errorf("Attribute[oltp index updates] is %s, want 600", att["oltp index updates"])
+	}
+
+	// Thread[main,5,main]  oltp non index updates   = 16
+	if att["oltp non index updates"] != "16" {
+		t.Errorf("Attribute[oltp non index updates] is %s, want 600", att["oltp non index updates"])
+	}
+
 	// Thread[main,5,main]  write concern            = SAFE
+	if att["write concern"] != "SAFE" {
+		t.Errorf("Attribute[write concern] is %s, want 600", att["write concern"])
+	}
 }
 
 func TestParsePIDStat(t *testing.T) {

@@ -98,6 +98,15 @@ func ProcessSysbenchResult(file string) (string, []string, map[string]string) {
 	att["nCollectionSize"] = find_parameter(lines, "documents per collection[ ]+= ([0-9,]+)")
 	att["nFeedbackSeconds"] = find_parameter(lines, "feedback seconds[ ]+= ([0-9]+)")
 	att["nRunSeconds"] = find_parameter(lines, "run seconds[ ]+= ([0-9]+)")
+	att["oltp range size"] = find_parameter(lines, "oltp range size[ ]+= ([0-9]+)")
+	att["oltp point selects"] = find_parameter(lines, "oltp point selects[ ]+= ([0-9]+)")
+	att["oltp simple ranges"] = find_parameter(lines, "oltp simple ranges[ ]+= ([0-9]+)")
+	att["oltp sum ranges"] = find_parameter(lines, "oltp sum ranges[ ]+= ([0-9]+)")
+	att["oltp order ranges"] = find_parameter(lines, "oltp order ranges[ ]+= ([0-9]+)")
+	att["oltp distinct ranges"] = find_parameter(lines, "oltp distinct ranges[ ]+= ([0-9]+)")
+	att["oltp index updates"] = find_parameter(lines, "oltp index updates[ ]+= ([0-9]+)")
+	att["oltp non index updates"] = find_parameter(lines, "oltp non index updates[ ]+= ([0-9]+)")
+	att["write concern"] = find_parameter(lines, "write concern[ ]+= ([A-Z]+)")
 
 	re := regexp.MustCompile("seconds : cum tps=([0-9.,]+) : int tps=([0-9.,]+) : cum ips=[0-9.,]+ : int ips=[0-9.,]+")
 

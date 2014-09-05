@@ -1,6 +1,9 @@
 package parser
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+)
 
 func TestProcessSysbenchResult(t *testing.T) {
 	cum, trend, att := ProcessSysbenchResult("test.txt")
@@ -43,4 +46,24 @@ func TestParseMongoSIMStat(t *testing.T) {
 	if r.Nodes[0]["st_staging_minutes"].Op_count != 43500 {
 		t.Error("mongo-sim op_per_second is ", r.Nodes[0]["st_staging_minutes"].Op_count, ", expecting 100")
 	}
+}
+
+func TestParseMongoPerfResult(t *testing.T) {
+	r := ProcessMongoPerfResult("mongo-perf.txt")
+
+	if r == nil {
+		t.Error("[mongo-perf] return value is nil")
+	}
+
+	if len(r) != 12 {
+		t.Error("[mongo-perf] receive wrong number of results, received ", len(r), " expecting 12")
+	}
+
+	fmt.Println(r)
+
+	if r["Geo.within.center_TH-001"].Result != 928.11 {
+		t.Error("[mongo-perf] receive wrong value of results, received ", r["Geo.within.center_TH-001"].Result, " expecting 928.11")
+	}
+
+	// FIXME need more test for average and CV
 }

@@ -1,0 +1,107 @@
+[mongo-sim] Simulation Configuration:
+[mongo-sim]   run_id:		 0
+[mongo-sim]   host:		 mongodb://127.0.0.1/
+[mongo-sim]   workload:		 mms
+[mongo-sim]   clients:		 10
+[mongo-sim]   events:		 1000
+[mongo-sim]   threads:		 5
+[mongo-sim]   events/s:		 (unlimited)
+[mongo-sim]   init phase:	 yes
+[mongo-sim]   teardown phase:	 no
+[mongo-sim]   local states:	 yes
+[mongo-sim]   node count:	 7
+[mongo-sim] [/home/rui/git/mongo-sim.10gen/workloads/mms.cpp:357]: done with staging minutes DB, total agents: 495
+
+[mongo-sim] [/home/rui/git/mongo-sim.10gen/workloads/mms.cpp:357]: done with staging minutes DB, total agents: 495
+
+[mongo-sim] [/home/rui/git/mongo-sim.10gen/workloads/mms.cpp:357]: done with staging minutes DB, total agents: 496
+
+[mongo-sim] [/home/rui/git/mongo-sim.10gen/workloads/mms.cpp:357]: done with staging minutes DB, total agents: 499
+
+[mongo-sim] [/home/rui/git/mongo-sim.10gen/workloads/mms.cpp:357]: done with staging minutes DB, total agents: 500
+
+[mongo-sim] [/home/rui/git/mongo-sim.10gen/workloads/mms.cpp:375]: done with staging hours DB, total agents:  500
+
+[mongo-sim] [/home/rui/git/mongo-sim.10gen/workloads/mms.cpp:375]: done with staging hours DB, total agents:  500
+
+[mongo-sim] [/home/rui/git/mongo-sim.10gen/workloads/mms.cpp:375]: done with staging hours DB, total agents:  500
+
+[mongo-sim] [/home/rui/git/mongo-sim.10gen/workloads/mms.cpp:375]: done with staging hours DB, total agents:  500
+
+[mongo-sim] [/home/rui/git/mongo-sim.10gen/workloads/mms.cpp:375]: done with staging hours DB, total agents:  500
+
+[mongo-sim]   elapsed time:	 5s (5458810000ns)
+[mongo-sim]   nodes per second:	 200
+[mongo-sim] Done.
+[mongo-sim] Aggregated timing metrics from all threads for node st_staging_minutes: 
+query:   Samples: 0	Total Time: 0	Min: 0	Max: 0	Average: 0	Variance:0
+insert:  Samples: 43500	Total Time: 8324345000	Min: 85000	Max: 20656000	Average: 189000	Variance:1735105676639370082
+update:  Samples: 0	Total Time: 0	Min: 0	Max: 0	Average: 0	Variance:0
+remove:  Samples: 0	Total Time: 0	Min: 0	Max: 0	Average: 0	Variance:0
+count:   Samples: 0	Total Time: 0	Min: 0	Max: 0	Average: 0	Variance:0
+command: Samples: 0	Total Time: 0	Min: 0	Max: 0	Average: 0	Variance:0
+agg:     Samples: 0	Total Time: 0	Min: 0	Max: 0	Average: 0	Variance:0
+exhaust: Samples: 0	Total Time: 0	Min: 0	Max: 0	Average: 0	Variance:0
+
+[mongo-sim] Aggregated timing metrics from all threads for node st_staging_hours: 
+query:   Samples: 0	Total Time: 0	Min: 0	Max: 0	Average: 0	Variance:0
+insert:  Samples: 43500	Total Time: 10321103000	Min: 97000	Max: 19453000	Average: 235091	Variance:801854645253474976
+update:  Samples: 0	Total Time: 0	Min: 0	Max: 0	Average: 0	Variance:0
+remove:  Samples: 0	Total Time: 0	Min: 0	Max: 0	Average: 0	Variance:0
+count:   Samples: 0	Total Time: 0	Min: 0	Max: 0	Average: 0	Variance:0
+command: Samples: 0	Total Time: 0	Min: 0	Max: 0	Average: 0	Variance:0
+agg:     Samples: 0	Total Time: 0	Min: 0	Max: 0	Average: 0	Variance:0
+exhaust: Samples: 0	Total Time: 0	Min: 0	Max: 0	Average: 0	Variance:0
+
+[mongo-sim] Aggregated timing metrics from all threads for node st_new_event: 
+query:   Samples: 0	Total Time: 0	Min: 0	Max: 0	Average: 0	Variance:0
+insert:  Samples: 0	Total Time: 0	Min: 0	Max: 0	Average: 0	Variance:0
+update:  Samples: 660	Total Time: 77599000	Min: 80000	Max: 415000	Average: 117065	Variance:387324606873245824
+remove:  Samples: 0	Total Time: 0	Min: 0	Max: 0	Average: 0	Variance:0
+count:   Samples: 0	Total Time: 0	Min: 0	Max: 0	Average: 0	Variance:0
+command: Samples: 0	Total Time: 0	Min: 0	Max: 0	Average: 0	Variance:0
+agg:     Samples: 0	Total Time: 0	Min: 0	Max: 0	Average: 0	Variance:0
+exhaust: Samples: 0	Total Time: 0	Min: 0	Max: 0	Average: 0	Variance:0
+
+[mongo-sim] Aggregated timing metrics from all threads for node st_add_newhost_hour: 
+query:   Samples: 0	Total Time: 0	Min: 0	Max: 0	Average: 0	Variance:0
+insert:  Samples: 0	Total Time: 0	Min: 0	Max: 0	Average: 0	Variance:0
+update:  Samples: 0	Total Time: 0	Min: 0	Max: 0	Average: 0	Variance:0
+remove:  Samples: 0	Total Time: 0	Min: 0	Max: 0	Average: 0	Variance:0
+count:   Samples: 0	Total Time: 0	Min: 0	Max: 0	Average: 0	Variance:0
+command: Samples: 0	Total Time: 0	Min: 0	Max: 0	Average: 0	Variance:0
+agg:     Samples: 0	Total Time: 0	Min: 0	Max: 0	Average: 0	Variance:0
+exhaust: Samples: 0	Total Time: 0	Min: 0	Max: 0	Average: 0	Variance:0
+
+[mongo-sim] Aggregated timing metrics from all threads for node st_add_newhost_min: 
+query:   Samples: 0	Total Time: 0	Min: 0	Max: 0	Average: 0	Variance:0
+insert:  Samples: 0	Total Time: 0	Min: 0	Max: 0	Average: 0	Variance:0
+update:  Samples: 0	Total Time: 0	Min: 0	Max: 0	Average: 0	Variance:0
+remove:  Samples: 0	Total Time: 0	Min: 0	Max: 0	Average: 0	Variance:0
+count:   Samples: 0	Total Time: 0	Min: 0	Max: 0	Average: 0	Variance:0
+command: Samples: 0	Total Time: 0	Min: 0	Max: 0	Average: 0	Variance:0
+agg:     Samples: 0	Total Time: 0	Min: 0	Max: 0	Average: 0	Variance:0
+exhaust: Samples: 0	Total Time: 0	Min: 0	Max: 0	Average: 0	Variance:0
+
+[mongo-sim] Aggregated timing metrics from all threads for node st_update_minutes_db: 
+query:   Samples: 0	Total Time: 0	Min: 0	Max: 0	Average: 0	Variance:0
+insert:  Samples: 0	Total Time: 0	Min: 0	Max: 0	Average: 0	Variance:0
+update:  Samples: 28710	Total Time: 3871383000	Min: 86000	Max: 364000	Average: 133628	Variance:6759999665692197764
+remove:  Samples: 0	Total Time: 0	Min: 0	Max: 0	Average: 0	Variance:0
+count:   Samples: 0	Total Time: 0	Min: 0	Max: 0	Average: 0	Variance:0
+command: Samples: 0	Total Time: 0	Min: 0	Max: 0	Average: 0	Variance:0
+agg:     Samples: 0	Total Time: 0	Min: 0	Max: 0	Average: 0	Variance:0
+exhaust: Samples: 0	Total Time: 0	Min: 0	Max: 0	Average: 0	Variance:0
+
+[mongo-sim] Aggregated timing metrics from all threads for node st_update_hours_db: 
+query:   Samples: 0	Total Time: 0	Min: 0	Max: 0	Average: 0	Variance:0
+insert:  Samples: 0	Total Time: 0	Min: 0	Max: 0	Average: 0	Variance:0
+update:  Samples: 28710	Total Time: 4126472000	Min: 86000	Max: 383000	Average: 142211	Variance:1345357001081574944
+remove:  Samples: 0	Total Time: 0	Min: 0	Max: 0	Average: 0	Variance:0
+count:   Samples: 0	Total Time: 0	Min: 0	Max: 0	Average: 0	Variance:0
+command: Samples: 0	Total Time: 0	Min: 0	Max: 0	Average: 0	Variance:0
+agg:     Samples: 0	Total Time: 0	Min: 0	Max: 0	Average: 0	Variance:0
+exhaust: Samples: 0	Total Time: 0	Min: 0	Max: 0	Average: 0	Variance:0
+
+==== final metrics ====
+{ "all_nodes" : {  }, "nodes" : [ { "st_staging_minutes" : { "op_count" : 43500, "op_errors" : 0, "op_retries" : 0, "op_retry_time_micros" : 0, "op_retry_avg_micros" : 0, "op_lat_total_micros" : 8324345000, "op_lat_min_micros" : 2147483647, "op_lat_max_micros" : 0, "op_lat_avg_micros" : 0, "op_lat_variance_micros" : 0, "insert_count" : 43500, "insert_errors" : 0, "insert_retries" : 0, "insert_retry_micros" : 0, "insert_retry_avg" : 0, "insert_avg_micros" : 189000, "insert_total_micros" : 8324345000, "insert_min_micros" : 85000, "insert_max_micros" : 20656000, "insert_variance" : 1735105676639370082, "update_count" : 0, "update_errors" : 0, "update_retries" : 0, "update_retry_micros" : 0, "update_retry_avg" : 0, "update_avg_micros" : 0, "update_total_micros" : 0, "update_min_micros" : 0, "update_max_micros" : 0, "update_variance" : 0, "remove_count" : 0, "remove_errors" : 0, "remove_retries" : 0, "remove_retry_micros" : 0, "remove_retry_avg" : 0, "remove_avg_micros" : 0, "remove_total_micros" : 0, "remove_min_micros" : 0, "remove_max_micros" : 0, "remove_variance" : 0, "query_count" : 0, "query_errors" : 0, "query_retries" : 0, "query_retry_micros" : 0, "query_retry_avg" : 0, "query_avg_micros" : 0, "query_total_micros" : 0, "query_min_micros" : 0, "query_max_micros" : 0, "query_variance" : 0, "exhaust_count" : 0, "exhaust_errors" : 0, "exhaust_retries" : 0, "exhaust_retry_micros" : 0, "exhaust_retry_avg" : 0, "exhaust_avg_micros" : 0, "exhaust_total_micros" : 0, "exhaust_min_micros" : 0, "exhaust_max_micros" : 0, "exhaust_variance" : 0 } }, { "st_staging_hours" : { "op_count" : 43500, "op_errors" : 0, "op_retries" : 0, "op_retry_time_micros" : 0, "op_retry_avg_micros" : 0, "op_lat_total_micros" : 10321103000, "op_lat_min_micros" : 2147483647, "op_lat_max_micros" : 0, "op_lat_avg_micros" : 0, "op_lat_variance_micros" : 0, "insert_count" : 43500, "insert_errors" : 0, "insert_retries" : 0, "insert_retry_micros" : 0, "insert_retry_avg" : 0, "insert_avg_micros" : 235091, "insert_total_micros" : 10321103000, "insert_min_micros" : 97000, "insert_max_micros" : 19453000, "insert_variance" : 801854645253474976, "update_count" : 0, "update_errors" : 0, "update_retries" : 0, "update_retry_micros" : 0, "update_retry_avg" : 0, "update_avg_micros" : 0, "update_total_micros" : 0, "update_min_micros" : 0, "update_max_micros" : 0, "update_variance" : 0, "remove_count" : 0, "remove_errors" : 0, "remove_retries" : 0, "remove_retry_micros" : 0, "remove_retry_avg" : 0, "remove_avg_micros" : 0, "remove_total_micros" : 0, "remove_min_micros" : 0, "remove_max_micros" : 0, "remove_variance" : 0, "query_count" : 0, "query_errors" : 0, "query_retries" : 0, "query_retry_micros" : 0, "query_retry_avg" : 0, "query_avg_micros" : 0, "query_total_micros" : 0, "query_min_micros" : 0, "query_max_micros" : 0, "query_variance" : 0, "exhaust_count" : 0, "exhaust_errors" : 0, "exhaust_retries" : 0, "exhaust_retry_micros" : 0, "exhaust_retry_avg" : 0, "exhaust_avg_micros" : 0, "exhaust_total_micros" : 0, "exhaust_min_micros" : 0, "exhaust_max_micros" : 0, "exhaust_variance" : 0 } }, { "st_new_event" : { "op_count" : 660, "op_errors" : 0, "op_retries" : 0, "op_retry_time_micros" : 0, "op_retry_avg_micros" : 0, "op_lat_total_micros" : 77599000, "op_lat_min_micros" : 80000, "op_lat_max_micros" : 415000, "op_lat_avg_micros" : 117065, "op_lat_variance_micros" : 0, "insert_count" : 0, "insert_errors" : 0, "insert_retries" : 0, "insert_retry_micros" : 0, "insert_retry_avg" : 0, "insert_avg_micros" : 0, "insert_total_micros" : 0, "insert_min_micros" : 0, "insert_max_micros" : 0, "insert_variance" : 0, "update_count" : 660, "update_errors" : 0, "update_retries" : 0, "update_retry_micros" : 0, "update_retry_avg" : 0, "update_avg_micros" : 117065, "update_total_micros" : 77599000, "update_min_micros" : 80000, "update_max_micros" : 415000, "update_variance" : 387324606873245824, "remove_count" : 0, "remove_errors" : 0, "remove_retries" : 0, "remove_retry_micros" : 0, "remove_retry_avg" : 0, "remove_avg_micros" : 0, "remove_total_micros" : 0, "remove_min_micros" : 0, "remove_max_micros" : 0, "remove_variance" : 0, "query_count" : 0, "query_errors" : 0, "query_retries" : 0, "query_retry_micros" : 0, "query_retry_avg" : 0, "query_avg_micros" : 0, "query_total_micros" : 0, "query_min_micros" : 0, "query_max_micros" : 0, "query_variance" : 0, "exhaust_count" : 0, "exhaust_errors" : 0, "exhaust_retries" : 0, "exhaust_retry_micros" : 0, "exhaust_retry_avg" : 0, "exhaust_avg_micros" : 0, "exhaust_total_micros" : 0, "exhaust_min_micros" : 0, "exhaust_max_micros" : 0, "exhaust_variance" : 0 } }, { "st_add_newhost_hour" : { "op_count" : 0, "op_errors" : 0, "op_retries" : 0, "op_retry_time_micros" : 0, "op_retry_avg_micros" : 0, "op_lat_total_micros" : 0, "op_lat_min_micros" : 2147483647, "op_lat_max_micros" : 0, "op_lat_avg_micros" : 0, "op_lat_variance_micros" : 0, "insert_count" : 0, "insert_errors" : 0, "insert_retries" : 0, "insert_retry_micros" : 0, "insert_retry_avg" : 0, "insert_avg_micros" : 0, "insert_total_micros" : 0, "insert_min_micros" : 0, "insert_max_micros" : 0, "insert_variance" : 0, "update_count" : 0, "update_errors" : 0, "update_retries" : 0, "update_retry_micros" : 0, "update_retry_avg" : 0, "update_avg_micros" : 0, "update_total_micros" : 0, "update_min_micros" : 0, "update_max_micros" : 0, "update_variance" : 0, "remove_count" : 0, "remove_errors" : 0, "remove_retries" : 0, "remove_retry_micros" : 0, "remove_retry_avg" : 0, "remove_avg_micros" : 0, "remove_total_micros" : 0, "remove_min_micros" : 0, "remove_max_micros" : 0, "remove_variance" : 0, "query_count" : 0, "query_errors" : 0, "query_retries" : 0, "query_retry_micros" : 0, "query_retry_avg" : 0, "query_avg_micros" : 0, "query_total_micros" : 0, "query_min_micros" : 0, "query_max_micros" : 0, "query_variance" : 0, "exhaust_count" : 0, "exhaust_errors" : 0, "exhaust_retries" : 0, "exhaust_retry_micros" : 0, "exhaust_retry_avg" : 0, "exhaust_avg_micros" : 0, "exhaust_total_micros" : 0, "exhaust_min_micros" : 0, "exhaust_max_micros" : 0, "exhaust_variance" : 0 } }, { "st_add_newhost_min" : { "op_count" : 0, "op_errors" : 0, "op_retries" : 0, "op_retry_time_micros" : 0, "op_retry_avg_micros" : 0, "op_lat_total_micros" : 0, "op_lat_min_micros" : 2147483647, "op_lat_max_micros" : 0, "op_lat_avg_micros" : 0, "op_lat_variance_micros" : 0, "insert_count" : 0, "insert_errors" : 0, "insert_retries" : 0, "insert_retry_micros" : 0, "insert_retry_avg" : 0, "insert_avg_micros" : 0, "insert_total_micros" : 0, "insert_min_micros" : 0, "insert_max_micros" : 0, "insert_variance" : 0, "update_count" : 0, "update_errors" : 0, "update_retries" : 0, "update_retry_micros" : 0, "update_retry_avg" : 0, "update_avg_micros" : 0, "update_total_micros" : 0, "update_min_micros" : 0, "update_max_micros" : 0, "update_variance" : 0, "remove_count" : 0, "remove_errors" : 0, "remove_retries" : 0, "remove_retry_micros" : 0, "remove_retry_avg" : 0, "remove_avg_micros" : 0, "remove_total_micros" : 0, "remove_min_micros" : 0, "remove_max_micros" : 0, "remove_variance" : 0, "query_count" : 0, "query_errors" : 0, "query_retries" : 0, "query_retry_micros" : 0, "query_retry_avg" : 0, "query_avg_micros" : 0, "query_total_micros" : 0, "query_min_micros" : 0, "query_max_micros" : 0, "query_variance" : 0, "exhaust_count" : 0, "exhaust_errors" : 0, "exhaust_retries" : 0, "exhaust_retry_micros" : 0, "exhaust_retry_avg" : 0, "exhaust_avg_micros" : 0, "exhaust_total_micros" : 0, "exhaust_min_micros" : 0, "exhaust_max_micros" : 0, "exhaust_variance" : 0 } }, { "st_update_minutes_db" : { "op_count" : 28710, "op_errors" : 0, "op_retries" : 0, "op_retry_time_micros" : 0, "op_retry_avg_micros" : 0, "op_lat_total_micros" : 3871383000, "op_lat_min_micros" : 86000, "op_lat_max_micros" : 364000, "op_lat_avg_micros" : 133628, "op_lat_variance_micros" : 0, "insert_count" : 0, "insert_errors" : 0, "insert_retries" : 0, "insert_retry_micros" : 0, "insert_retry_avg" : 0, "insert_avg_micros" : 0, "insert_total_micros" : 0, "insert_min_micros" : 0, "insert_max_micros" : 0, "insert_variance" : 0, "update_count" : 28710, "update_errors" : 0, "update_retries" : 0, "update_retry_micros" : 0, "update_retry_avg" : 0, "update_avg_micros" : 133628, "update_total_micros" : 3871383000, "update_min_micros" : 86000, "update_max_micros" : 364000, "update_variance" : 6759999665692197764, "remove_count" : 0, "remove_errors" : 0, "remove_retries" : 0, "remove_retry_micros" : 0, "remove_retry_avg" : 0, "remove_avg_micros" : 0, "remove_total_micros" : 0, "remove_min_micros" : 0, "remove_max_micros" : 0, "remove_variance" : 0, "query_count" : 0, "query_errors" : 0, "query_retries" : 0, "query_retry_micros" : 0, "query_retry_avg" : 0, "query_avg_micros" : 0, "query_total_micros" : 0, "query_min_micros" : 0, "query_max_micros" : 0, "query_variance" : 0, "exhaust_count" : 0, "exhaust_errors" : 0, "exhaust_retries" : 0, "exhaust_retry_micros" : 0, "exhaust_retry_avg" : 0, "exhaust_avg_micros" : 0, "exhaust_total_micros" : 0, "exhaust_min_micros" : 0, "exhaust_max_micros" : 0, "exhaust_variance" : 0 } }, { "st_update_hours_db" : { "op_count" : 28710, "op_errors" : 0, "op_retries" : 0, "op_retry_time_micros" : 0, "op_retry_avg_micros" : 0, "op_lat_total_micros" : 4126472000, "op_lat_min_micros" : 86000, "op_lat_max_micros" : 383000, "op_lat_avg_micros" : 142211, "op_lat_variance_micros" : 0, "insert_count" : 0, "insert_errors" : 0, "insert_retries" : 0, "insert_retry_micros" : 0, "insert_retry_avg" : 0, "insert_avg_micros" : 0, "insert_total_micros" : 0, "insert_min_micros" : 0, "insert_max_micros" : 0, "insert_variance" : 0, "update_count" : 28710, "update_errors" : 0, "update_retries" : 0, "update_retry_micros" : 0, "update_retry_avg" : 0, "update_avg_micros" : 142211, "update_total_micros" : 4126472000, "update_min_micros" : 86000, "update_max_micros" : 383000, "update_variance" : 1345357001081574944, "remove_count" : 0, "remove_errors" : 0, "remove_retries" : 0, "remove_retry_micros" : 0, "remove_retry_avg" : 0, "remove_avg_micros" : 0, "remove_total_micros" : 0, "remove_min_micros" : 0, "remove_max_micros" : 0, "remove_variance" : 0, "query_count" : 0, "query_errors" : 0, "query_retries" : 0, "query_retry_micros" : 0, "query_retry_avg" : 0, "query_avg_micros" : 0, "query_total_micros" : 0, "query_min_micros" : 0, "query_max_micros" : 0, "query_variance" : 0, "exhaust_count" : 0, "exhaust_errors" : 0, "exhaust_retries" : 0, "exhaust_retry_micros" : 0, "exhaust_retry_avg" : 0, "exhaust_avg_micros" : 0, "exhaust_total_micros" : 0, "exhaust_min_micros" : 0, "exhaust_max_micros" : 0, "exhaust_variance" : 0 } } ] }

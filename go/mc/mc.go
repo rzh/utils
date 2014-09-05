@@ -196,7 +196,7 @@ func (r *TheRun) findMongoD_Info(run_id int) mongodBuildInfo {
 
 	// FIXME: need find where is mongo executable here. right not, just use a symbol link.
 	output, err := r.runServerCmd(server,
-		"./mongo --norc --eval \"print('serverBuildInfo');printjson(db.serverBuildInfo())\"")
+		"~/mongo --norc --eval \"print('serverBuildInfo');printjson(db.serverBuildInfo())\"")
 
 	if err != nil {
 		log.Panicln("Failed to find serverBuildInfo for server [", server, "] with error [", err, "]")
@@ -237,7 +237,13 @@ func (r *TheRun) findMongoD_PID(server string) string {
 	// exec.Command("/bin/sh", "-c", "/bin/ps -e | grep mongod | grep -v grep | awk '{print $1}'").Output()
 
 	if err != nil {
-		log.Fatalln("error getting MongoD PID: ", err)
+		// now to try /sbin/pidof
+
+		_pid, err = r.runServerCmd(server, "/sbin/pidof mongod")
+
+		if err != nil {
+			log.Fatalln("Failed to find MongoD PID: ", err)
+		}
 	}
 
 	pid, err := strconv.Atoi(string(_pid[:len(_pid)-1]))
@@ -329,13 +335,13 @@ func (r *TheRun) RunClientTasks(i int, run_dir string) {
 		}
 	}()
 
-	r.Runs[i].Stats.Start_Time = time.Now().Unix()
+	r.Runs[i].Stats.Start_Time.Date = time.Now().UnixNano() / int64(time.Millisecond)
 	err = cmd.Run()
 	if err != nil {
 		// do not quit if this client return error code FIXME
 		// log.Fatal("Hammer client failed with -> ", err)
 	}
-	r.Runs[i].Stats.End_Time = time.Now().Unix()
+	r.Runs[i].Stats.End_Time.Date = time.Now().UnixNano() / int64(time.Millisecond)
 
 	time.Sleep(5 * time.Second) //chill for 5 second to collect some system stats after test done
 

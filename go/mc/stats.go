@@ -18,6 +18,10 @@ type Testbed struct {
 	Servers map[string]map[string]string `json:"servers"`
 }
 
+type DateTime struct {
+	Date int64 `json:"$date"`
+}
+
 // definition of Stat to be reported to dashboard
 type Stats struct {
 	Harness       string                 `json:"harness"`
@@ -28,11 +32,11 @@ type Stats struct {
 	Testbed       Testbed                `json:"test_bed"`
 	Summary       parser.StatsSummary    `json:"summary"`
 
-	TPS string
+	// TPS string
 	// Run_Date   string
-	Start_Time int64 `json:"start_time"` //epoch time, time.Now().Unix()
-	End_Time   int64 `json:"end_time"`
-	ID         string
+	Start_Time DateTime `json:"start_time"` //epoch time, time.Now().Unix()
+	End_Time   DateTime `json:"end_time"`
+	// ID         string
 	// Type         string // hammertime, sysbench, mongo-sim
 	History      []string
 	Server_Stats map[string]parser.ServerStats
@@ -47,7 +51,7 @@ func (r *TheRun) reportResults(run_id int, log_file string, run_dir string) {
 	t := strings.ToLower(r.Runs[run_id].Type)
 	// r.Runs[run_id].Stats.Type = t
 	r.Runs[run_id].Stats.Harness = t
-	r.Runs[run_id].Stats.ID = r.Runs[run_id].Run_id
+	// r.Runs[run_id].Stats.ID = r.Runs[run_id].Run_id
 	r.Runs[run_id].Stats.Workload = r.Runs[run_id].Run_id
 
 	// cache run first
@@ -59,13 +63,14 @@ func (r *TheRun) reportResults(run_id int, log_file string, run_dir string) {
 		Client_logs: rr.Client_logs, Server_logs: rr.Server_logs,
 		Type: rr.Type}
 
+	report_url = "http://54.68.84.192:8080/api/v1/results"
 	var err error
 	switch t {
 	case "sysbench":
-		log.Println("analyzing sysbench results")
+		log.Println("Process sysbench results")
 		cum, history, att := parser.ProcessSysbenchResult(log_file)
 
-		r.Runs[run_id].Stats.TPS = cum
+		// r.Runs[run_id].Stats.TPS = cum
 		r.Runs[run_id].Stats.Summary.AllNodes.Op_per_second, err = strconv.ParseFloat(strings.Replace(cum, ",", "", -1), 64)
 		if err != nil {
 			log.Panicln("Error parsing op_per_second ", cum, ", error: ", err)
@@ -79,10 +84,53 @@ func (r *TheRun) reportResults(run_id int, log_file string, run_dir string) {
 		}
 
 	case "mongo-sim":
-		log.Println("processing mongo-sim results")
+		log.Println("Processing mongo-sim results")
 		result_ := parser.ProcessMongoSIMResult(log_file)
 
 		r.Runs[run_id].Stats.Summary = result_
+
+	case "mongo-perf":
+		log.Println("Processing mongo-perf results")
+		result_ := parser.ProcessMongoPerfResult(log_file)
+
+		for k, v := range result_ {
+			_ = k
+			_ = v
+			/*
+				Name    string
+				Thread  int64
+				Result  float64
+				CV      string
+				Version string
+				GitSHA  string
+			*/
+			r.Runs[run_id].Stats.Workload = v.Name
+			r.Runs[run_id].Stats.Attributes["nThread"] = v.Thread
+			r.Runs[run_id].Stats.Attributes["CV"] = v.CV
+			r.Runs[run_id].Stats.ServerVersion = v.Version
+			r.Runs[run_id].Stats.ServerGitSHA = v.GitSHA
+			r.Runs[run_id].Stats.Summary.AllNodes.Op_per_second = v.Result
+
+			// print
+			s, _ := json.MarshalIndent(r.Runs[run_id].Stats, "  ", "    ")
+			os.Stdout.Write(s)
+			fmt.Println("\n********")
+
+			// report to server
+			if report_url != "" {
+				// report to report_url if it is not empty
+				r, err := http.Post(report_url, "application/json", bytes.NewBuffer(s))
+
+				if err == nil {
+					log.Println("Submit result to server, reponse: ", r)
+				} else {
+					log.Panicln("Submit results failed with error: ", err)
+				}
+			}
+		}
+
+		// mongo-perf will not report server stats since it is not meaningful
+		return
 
 	default:
 		log.Println("no type infor, ignore results analyzing")
@@ -103,13 +151,7 @@ func (r *TheRun) reportResults(run_id int, log_file string, run_dir string) {
 		}
 	}
 
-	// print
 	s, _ := json.MarshalIndent(r.Runs[run_id].Stats, "  ", "    ")
-	os.Stdout.Write(s)
-	fmt.Println("\n********")
-	//fmt.Printf("%# v", pretty.Formatter(r.Runs[run_id].Stats))
-
-	report_url = "http://54.68.84.192:8080/api/v1/results"
 	if report_url != "" {
 		// report to report_url if it is not empty
 		r, err := http.Post(report_url, "application/json", bytes.NewBuffer(s))
@@ -120,4 +162,9 @@ func (r *TheRun) reportResults(run_id int, log_file string, run_dir string) {
 			log.Panicln("Submit results failed with error: ", err)
 		}
 	}
+
+	// print
+	os.Stdout.Write(s)
+	fmt.Println("\n********")
+	//fmt.Printf("%# v", pretty.Formatter(r.Runs[run_id].Stats))
 }

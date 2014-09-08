@@ -39,7 +39,7 @@ type Stats struct {
 	// ID         string
 	// Type         string // hammertime, sysbench, mongo-sim
 	History      []string
-	Server_Stats map[string]parser.ServerStats
+	Server_Stats map[string]parser.ServerStats `json:"server_stats"`
 }
 
 func replaceDot(s string) string {
@@ -153,17 +153,20 @@ func (r *TheRun) reportResults(run_id int, log_file string, run_dir string) {
 
 	// report pidstat here
 	r.Runs[run_id].Stats.Server_Stats = make(map[string]parser.ServerStats)
+
 	for k := 0; k < len(r.Runs[run_id].Servers); k++ {
 		pidfile := run_dir + "/pidstat.log--" + r.Runs[run_id].Servers[k]
-		_, stats := parser.ParsePIDStat(pidfile)
+		stats := parser.ParsePIDStat(pidfile)
 
-		r.Runs[run_id].Stats.Server_Stats[replaceDot(r.Runs[run_id].Servers[k])] = make(parser.ServerStats)
-		for kk, vv := range stats {
-			// r.Runs[run_id].Stats.Server_Stats[r.Runs[run_id].Servers[k]][kk] = make([]parser.DataPoint, len(vv))
-			// log.Println("++++> ", copy(r.Runs[run_id].Stats.Server_Stats[r.Runs[run_id].Servers[k]][kk], vv))
-			//append(r.Runs[run_id].Stats.Server_Stats[r.Runs[run_id].Servers[k]][kk], vv)
-			r.Runs[run_id].Stats.Server_Stats[replaceDot(r.Runs[run_id].Servers[k])][kk] = vv
-		}
+		// r.Runs[run_id].Stats.Server_Stats[replaceDot(r.Runs[run_id].Servers[k])] = make(ServerStats)
+		// r.Runs[run_id].Stats.Server_Stats[r.Runs[run_id].Servers[k]][kk] = make([]parser.DataPoint, len(vv))
+		// log.Println("++++> ", copy(r.Runs[run_id].Stats.Server_Stats[r.Runs[run_id].Servers[k]][kk], vv))
+		//append(r.Runs[run_id].Stats.Server_Stats[r.Runs[run_id].Servers[k]][kk], vv)
+		log.Println("\n\n++++++++-----+++++++++\n\n")
+		//r.Runs[run_id].Stats.Server_Stats[replaceDot(r.Runs[run_id].Servers[k])].Cpu = make([]parser.DataPoint, len(stats["cpu"]), len(stats["cpu"]))
+		// copy(r.Runs[run_id].Stats.Server_Stats[replaceDot(r.Runs[run_id].Servers[k])].Cpu, stats["cpu"])
+		r.Runs[run_id].Stats.Server_Stats[replaceDot(r.Runs[run_id].Servers[k])] = stats
+		log.Println(r.Runs[run_id].Stats.Server_Stats[replaceDot(r.Runs[run_id].Servers[k])])
 	}
 
 	s, _ := json.MarshalIndent(r.Runs[run_id].Stats, "  ", "    ")

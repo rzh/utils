@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -134,25 +135,25 @@ func ProcessSysbenchResult(file string) (string, []string, map[string]string) {
 	return cum, trend, att
 }
 
-type DataPoint struct {
-	ts string
-	d  string
+type ServerStats struct {
+	Process string    `json:"process "`
+	Ts      []int64   `json:"ts"`
+	Cpu     []float64 `json:"cpu"`
+	Mem     []float64 `json:"mem"`
 }
-
-type ServerStats map[string][]DataPoint
 
 // parse output from pidstat
 // return value:
 //     process string  [mongod/mongos]
 //     stats   map[string][]DataPoint
-func ParsePIDStat(file string) (string, ServerStats) {
-	var cpu []DataPoint
-	var mem []DataPoint
+func ParsePIDStat(file string) ServerStats {
+	var cpu []float64
+	var mem []float64
+	var ts []int64
 
 	var cpu_loc, mem_loc int
 
 	process := ""
-	stats := make(map[string][]DataPoint)
 
 	f, err := ioutil.ReadFile(file)
 	if err != nil {
@@ -200,19 +201,41 @@ func ParsePIDStat(file string) (string, ServerStats) {
 				}
 
 				// now take data
-				cpu = append(cpu, DataPoint{ts: dps[0], d: dps[cpu_loc]})
-				mem = append(mem, DataPoint{ts: dps[0], d: dps[mem_loc]})
+				f, err := strconv.ParseFloat(dps[cpu_loc], 64)
+
+				if err != nil {
+					log.Panicln("Failed to parse CPU for pidstat with error ", err)
+				}
+				cpu = append(cpu, f)
+
+				f, err = strconv.ParseFloat(dps[mem_loc], 64)
+				if err != nil {
+					log.Panicln("Failed to parse Mem for pidstat with error ", err)
+				}
+				mem = append(mem, f)
 
 				if process == "" {
 					process = dps[len(dps)-1] // the last one is process name
 				}
+
+				// ts
+				t, e := strconv.ParseInt(dps[0], 10, 64)
+				if e != nil {
+					log.Panicln("Failed to parse Timestamp for pidstat with error ", e)
+				}
+
+				ts = append(ts, t)
+
 			}
 		}
 	}
 
 	fmt.Println("**** process  ", process)
-	stats["cpu"] = cpu
-	stats["mem"] = mem
 
-	return process, stats
+	return ServerStats{
+		Process: process,
+		Cpu:     cpu,
+		Mem:     mem,
+		Ts:      ts,
+	}
 }

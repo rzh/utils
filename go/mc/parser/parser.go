@@ -10,7 +10,7 @@ import (
 
 type NodeStats struct {
 	Total_time_micros    int64   `json:"total_time_micros"`
-	Op_per_second        float64 `json:"op_per_second"`
+	Op_throughput        float64 `json:"op_throughput"`
 	Op_count             int64   `json:"op_count"`
 	Op_errors            int64   `json:"op_errors"`
 	Op_retries           int64   `json:"op_retries"`
@@ -50,7 +50,7 @@ func ProcessMongoSIMResult(file string) StatsSummary {
 		}
 	}
 
-	return StatsSummary{AllNodes: NodeStats{Op_per_second: 100}}
+	return StatsSummary{AllNodes: NodeStats{Op_throughput: 100}}
 }
 
 func ProcessSysbenchResult(file string) (string, []string, map[string]string) {

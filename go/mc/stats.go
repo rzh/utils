@@ -71,9 +71,9 @@ func (r *TheRun) reportResults(run_id int, log_file string, run_dir string) {
 		cum, history, att := parser.ProcessSysbenchResult(log_file)
 
 		// r.Runs[run_id].Stats.TPS = cum
-		r.Runs[run_id].Stats.Summary.AllNodes.Op_per_second, err = strconv.ParseFloat(strings.Replace(cum, ",", "", -1), 64)
+		r.Runs[run_id].Stats.Summary.AllNodes.Op_throughput, err = strconv.ParseFloat(strings.Replace(cum, ",", "", -1), 64)
 		if err != nil {
-			log.Panicln("Error parsing op_per_second ", cum, ", error: ", err)
+			log.Panicln("Error parsing op_throughput ", cum, ", error: ", err)
 		}
 
 		r.Runs[run_id].Stats.History = history
@@ -109,7 +109,7 @@ func (r *TheRun) reportResults(run_id int, log_file string, run_dir string) {
 			r.Runs[run_id].Stats.Attributes["CV"] = v.CV
 			r.Runs[run_id].Stats.ServerVersion = v.Version
 			r.Runs[run_id].Stats.ServerGitSHA = v.GitSHA
-			r.Runs[run_id].Stats.Summary.AllNodes.Op_per_second = v.Result
+			r.Runs[run_id].Stats.Summary.AllNodes.Op_throughput = v.Result
 
 			// print
 			s, _ := json.MarshalIndent(r.Runs[run_id].Stats, "  ", "    ")

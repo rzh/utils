@@ -6,7 +6,7 @@ import (
 )
 
 func TestProcessSysbenchResult(t *testing.T) {
-	cum, trend, att := ProcessSysbenchResult("test.txt")
+	cum, trend, att := ProcessSysbenchResult("sysbench.txt")
 
 	if cum != "741.86" {
 		t.Error("Cumulative TPS is %v, want 741.86", cum)
@@ -98,12 +98,12 @@ func TestParsePIDStat(t *testing.T) {
 		t.Error("Pidstat process-type is " + s + " expecting mongod")
 	}
 
-	if dps["cpu"][0].d != "91.01" {
-		t.Error("Pidstat cpu[0] is " + dps["cpu"][0].d + " expecting 91.01")
+	if dps["cpu"][0].d != "37.36" {
+		t.Error("Pidstat cpu[0] is " + dps["cpu"][0].d + " expecting 37.36")
 	}
 
-	if dps["mem"][1].d != "23.29" {
-		t.Error("Pidstat mem[1] is " + dps["mem"][1].d + " expecting 23.29")
+	if dps["mem"][1].d != "10.09" {
+		t.Error("Pidstat mem[1] is " + dps["mem"][1].d + " expecting 10.09")
 	}
 }
 

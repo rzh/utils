@@ -2,6 +2,7 @@ package parser
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"regexp"
@@ -147,6 +148,9 @@ type ServerStats map[string][]DataPoint
 func ParsePIDStat(file string) (string, ServerStats) {
 	var cpu []DataPoint
 	var mem []DataPoint
+
+	var cpu_loc, mem_loc int
+
 	process := ""
 	stats := make(map[string][]DataPoint)
 
@@ -156,17 +160,40 @@ func ParsePIDStat(file string) (string, ServerStats) {
 	}
 
 	lines := strings.Split(string(f), "\n")
-	re := regexp.MustCompile("     Time      TGID")
+	re := regexp.MustCompile("%usr %system  %guest    %CPU")
+
+	mline := 0
+	total_mline := 0
 
 	for i := 0; i < len(lines); i++ {
 		if re.MatchString(lines[i]) {
-			i++ // next line is what we are looking, which is for process. Not thread
+			total_mline++
+		}
+	}
 
-			if i < len(lines) {
+	for i := 0; i < len(lines); i++ {
+		if re.MatchString(lines[i]) {
+			if cpu_loc == 0 {
+				// let's figure out location of %CPU and %MEM
+				t := strings.Fields(lines[i])
+
+				for j := 0; j < len(t); j++ {
+					if t[j] == "%CPU" {
+						cpu_loc = j - 1
+					} else if t[j] == "%MEM" {
+						mem_loc = j - 1
+					}
+				}
+			}
+			i++     // next line is what we are looking, which is for process. Not thread
+			mline++ // found one data line
+
+			// skip the first and last ten line
+			if i < len(lines) && mline >= 10 && mline < total_mline-10 {
 				// take Datapoint
 				dps := strings.Fields(lines[i])
 
-				if len(dps) != 19 {
+				if len(dps) != 21 {
 					// the line is either wrong format of truncated
 					log.Fatalf("Error parsing pidstat, line =(%s), wrong number of data %d",
 						lines[i], len(dps))
@@ -183,6 +210,7 @@ func ParsePIDStat(file string) (string, ServerStats) {
 		}
 	}
 
+	fmt.Println("**** process  ", process)
 	stats["cpu"] = cpu
 	stats["mem"] = mem
 

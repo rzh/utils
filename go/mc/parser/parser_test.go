@@ -92,18 +92,18 @@ func TestProcessSysbenchResult(t *testing.T) {
 }
 
 func TestParsePIDStat(t *testing.T) {
-	s, dps := ParsePIDStat("pidstat.txt")
+	dps := ParsePIDStat("pidstat.txt")
 
-	if s != "mongod" {
-		t.Error("Pidstat process-type is " + s + " expecting mongod")
+	if dps.Process != "mongod" {
+		t.Error("Pidstat process-type is " + dps.Process + " expecting mongod")
 	}
 
-	if dps["cpu"][0].d != "37.36" {
-		t.Error("Pidstat cpu[0] is " + dps["cpu"][0].d + " expecting 37.36")
+	if dps.Cpu[0] != 37.36 {
+		t.Error("Pidstat cpu[0] is ", dps.Cpu[0], " expecting 37.36")
 	}
 
-	if dps["mem"][1].d != "10.09" {
-		t.Error("Pidstat mem[1] is " + dps["mem"][1].d + " expecting 10.09")
+	if dps.Mem[1] != 10.09 {
+		t.Error("Pidstat mem[1] is ", dps.Mem[1], " expecting 10.09")
 	}
 }
 

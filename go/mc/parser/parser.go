@@ -200,11 +200,11 @@ func ParsePIDStat(file string) (string, ServerStats) {
 				}
 
 				// now take data
-				cpu = append(cpu, DataPoint{ts: dps[0], d: dps[6]})
-				mem = append(mem, DataPoint{ts: dps[0], d: dps[12]})
+				cpu = append(cpu, DataPoint{ts: dps[0], d: dps[cpu_loc]})
+				mem = append(mem, DataPoint{ts: dps[0], d: dps[mem_loc]})
 
 				if process == "" {
-					process = dps[18]
+					process = dps[len(dps)-1] // the last one is process name
 				}
 			}
 		}

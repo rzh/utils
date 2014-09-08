@@ -46,6 +46,21 @@ func replaceDot(s string) string {
 	return strings.Replace(s, ".", "_", -1)
 }
 
+// only used for clean report
+type HammerTask_ struct {
+	Run_id        string   `json:run_id`
+	Cmd           string   `json:cmd`
+	Hammer_folder string   `json:hammer_folder`
+	Clients       []string `json:clients`
+	Servers       []string `json:servers`
+
+	// log files to be collected from client and server
+	Client_logs []string `json:client_logs`
+	Server_logs []string `json:server_logs`
+
+	Type string `json:type`
+}
+
 func (r *TheRun) reportResults(run_id int, log_file string, run_dir string) {
 	// this is the place to analyze results.
 	t := strings.ToLower(r.Runs[run_id].Type)
@@ -58,7 +73,7 @@ func (r *TheRun) reportResults(run_id int, log_file string, run_dir string) {
 	//rr, _ := json.Marshal(r.Runs[run_id])
 	rr := r.Runs[run_id]
 	r.Runs[run_id].Stats.Attributes["run-by"] = "hammer-mc"
-	r.Runs[run_id].Stats.Attributes["hammer-mc-cmd"] = HammerTask{Run_id: rr.Run_id,
+	r.Runs[run_id].Stats.Attributes["hammer-mc-cmd"] = HammerTask_{Run_id: rr.Run_id,
 		Cmd: rr.Cmd, Clients: rr.Clients, Servers: rr.Servers,
 		Client_logs: rr.Client_logs, Server_logs: rr.Server_logs,
 		Type: rr.Type}

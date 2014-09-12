@@ -78,7 +78,10 @@ func (r *TheRun) reportResults(run_id int, log_file string, run_dir string) {
 		Client_logs: rr.Client_logs, Server_logs: rr.Server_logs,
 		Type: rr.Type}
 
-	report_url = "http://54.68.84.192:8080/api/v1/results"
+	if report_url == "" {
+		// report_url = "http://54.68.84.192:8080/api/v1/results"
+		report_url = "http://dyno.mongodb.parts/api/v1/results"
+	}
 	var err error
 	switch t {
 	case "sysbench":
@@ -122,7 +125,7 @@ func (r *TheRun) reportResults(run_id int, log_file string, run_dir string) {
 			r.Runs[run_id].Stats.Workload = v.Name
 			r.Runs[run_id].Stats.Attributes["nThread"] = v.Thread
 			r.Runs[run_id].Stats.Attributes["CV"] = v.CV
-			r.Runs[run_id].Stats.ServerVersion = v.Version
+			r.Runs[run_id].Stats.ServerVersion = strings.Fields(v.Version)[2]
 			r.Runs[run_id].Stats.ServerGitSHA = v.GitSHA
 			r.Runs[run_id].Stats.Summary.AllNodes.Op_throughput = v.Result
 
@@ -137,7 +140,7 @@ func (r *TheRun) reportResults(run_id int, log_file string, run_dir string) {
 				r, err := http.Post(report_url, "application/json", bytes.NewBuffer(s))
 
 				if err == nil {
-					log.Println("Submit result to server, reponse: ", r)
+					log.Println("Submit results to server succeeded with reponse:\n", r)
 				} else {
 					log.Panicln("Submit results failed with error: ", err)
 				}

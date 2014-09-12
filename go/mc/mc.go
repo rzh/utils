@@ -627,7 +627,7 @@ func init() {
 	flag.StringVar(&run, "run", "", "ID for the run")
 	flag.StringVar(&config, "config", "", "Config JSON for the run")
 	flag.StringVar(&test, "test", "", "Suffix for the report folder")
-	flag.StringVar(&report_url, "rurl", "", "URL to report test results")
+	flag.StringVar(&report_url, "report", "", "URL to report test results")
 }
 
 func main() {

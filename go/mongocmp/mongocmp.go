@@ -55,8 +55,9 @@ func parseFile(path string) (map[string]float64, map[string]string, string) {
 		// check whether it is db version
 		// format:
 		//    db version: 2.7.5
+		//    db version: 2.7.5-pre-
 
-		if match, err := regexp.MatchString("^db version: [0-9.]+$", scan.Text()); match && err == nil {
+		if match, err := regexp.MatchString("^db version: [0-9.pre-]+$", scan.Text()); match && err == nil {
 			// found db version
 
 			if db_version == "" {
@@ -211,7 +212,7 @@ func main() {
 	after[0], after_cvs[0], after_info[0] = parseFile(flag.Arg(1))
 
 	if !*wiki {
-		fmt.Printf("# baseline : %s\n# new results : %s\n", flag.Arg(0)+" ["+after_info[0]+"]", flag.Arg(1)+" ["+before_info+"]")
+		fmt.Printf("# baseline : %s\n# new results : %s\n", flag.Arg(0)+" ["+before_info+"]", flag.Arg(1)+" ["+after_info[0]+"]")
 		// fmt.Fprint(w, "\nbenchmark\tbaseline OP/s\tnew OP/s\tspeedup\n")
 		fmt.Fprint(w, "benchmark\told ns/op\tnew ns/op\tdelta\n")
 	} else {

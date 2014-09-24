@@ -23,12 +23,14 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"regexp"
 	"strconv"
 	str "strings"
 	"time"
 
 	"github.com/ActiveState/tail"
 	"github.com/kr/pretty"
+	"github.com/rzh/utils/go/mc/parser"
 )
 
 var (
@@ -38,6 +40,7 @@ var (
 	pem_file   string
 	// run_id     string
 	run        string
+	autorun    bool
 	config     string
 	test       string
 	report_url string
@@ -121,7 +124,7 @@ type HammerTask struct {
 
 	Type string `json:type`
 
-	Stats Stats
+	Stats parser.Stats
 }
 
 type TheRun struct {
@@ -170,21 +173,9 @@ func (r *TheRun) findMongoD_CMD(server string) string {
 	return ""
 }
 
-type mongodBuildInfo struct {
-	Version          string `json:"version"` //     "version" : "2.6.4",
-	GitVersion       string `json:"gitVersion"`
-	OpenSSLVersion   string `json:"OpenSSLVersion"`
-	SysInfo          string `json:"sysInfo"`
-	LoaderFlags      string `json:"loaderFlags"`
-	CompilterFlags   string `json:"compilerFlags"`
-	Allocator        string `json:"allocator"`
-	JavascriptEngine string `json:"javascriptEngine"`
-	Bits             int    `json:"bits"`
-	Debug            bool   `json:"debug"`
-}
-
-func (r *TheRun) findMongoD_Info(run_id int) mongodBuildInfo {
-	var buildInfo mongodBuildInfo
+func (r *TheRun) findMongoD_Info(run_id int) parser.ServerInfo {
+	var buildInfo parser.MongodBuildInfo
+	var hostInfo parser.MongoHostInfo
 
 	var server string
 
@@ -210,7 +201,41 @@ func (r *TheRun) findMongoD_Info(run_id int) mongodBuildInfo {
 	}
 
 	fmt.Printf("%# v\n", pretty.Formatter(buildInfo))
-	return buildInfo
+
+	output, err = r.runServerCmd(server,
+		"~/mongo --norc --eval \"print('hostInfo');printjson(db.hostInfo())\"")
+
+	if err != nil {
+		log.Panicln("Failed to find serverBuildInfo for server [", server, "] with error [", err, "]")
+	}
+
+	lines = str.Split(string(output), "\n")
+
+	// need take out lines has ISODate here, not standard JSON.
+	re := regexp.MustCompile(": ISODate")
+	reNum := regexp.MustCompile(": NumberLong")
+	for i := 0; i < len(lines); i++ {
+		if re.MatchString(lines[i]) {
+			// remove this line, and reset i to i-1
+			lines = append(lines[:i], lines[i+1:]...)
+			i = i - 1
+		} else if reNum.MatchString(lines[i]) {
+			ss := str.Replace(lines[i], "NumberLong", "", -1)
+			ss = str.Replace(ss, "(", "", -1)
+			ss = str.Replace(ss, ")", "", -1)
+			lines[i] = ss
+		}
+
+	}
+
+	err = json.Unmarshal([]byte(str.Join(lines[3:], "\n")), &hostInfo)
+	if err != nil {
+		log.Panicln("Cannot unmarshal hostInfo with error: ", err, "\n\n", string(output))
+	}
+
+	fmt.Printf("%# v\n", pretty.Formatter(hostInfo))
+
+	return parser.ServerInfo{BuildInfo: buildInfo, HostInfo: hostInfo}
 }
 
 func (r *TheRun) findMongoD_PID(server string) string {
@@ -219,26 +244,8 @@ func (r *TheRun) findMongoD_PID(server string) string {
 	var _pid []byte
 
 	_pid, err = r.runServerCmd(server, "/bin/pidof mongod")
-	/*
-		if r.PemFile != "" {
-			_pid, err = exec.Command(
-				"/usr/bin/ssh",
-				"-i", r.PemFile,
-				server,
-				"/bin/ps -e | grep mongod | grep -v grep | awk '{print $1}'").Output()
-		} else {
-			_pid, err = exec.Command(
-				"/usr/bin/ssh",
-				server,
-				"/bin/ps -e | grep mongod | grep -v grep | awk '{print $1}'").Output()
-		}
-	*/
-
-	// exec.Command("/bin/sh", "-c", "/bin/ps -e | grep mongod | grep -v grep | awk '{print $1}'").Output()
-
 	if err != nil {
 		// now to try /sbin/pidof
-
 		_pid, err = r.runServerCmd(server, "/sbin/pidof mongod")
 
 		if err != nil {
@@ -246,6 +253,7 @@ func (r *TheRun) findMongoD_PID(server string) string {
 		}
 	}
 
+	// TODO: make sure check for array here, could have multiple pids
 	pid, err := strconv.Atoi(string(_pid[:len(_pid)-1]))
 
 	if err != nil {
@@ -281,11 +289,14 @@ func (r *TheRun) RunClientTasks(i int, run_dir string) {
 	// var cp_cmd *exec.Cmd
 
 	// first try to find out server buildInfo
-	buildInfo := r.findMongoD_Info(i)
+	serverInfo := r.findMongoD_Info(i)
 
-	r.Runs[i].Stats.ServerVersion = buildInfo.Version
-	r.Runs[i].Stats.ServerGitSHA = buildInfo.GitVersion
+	r.Runs[i].Stats.ServerVersion = serverInfo.BuildInfo.Version
+	r.Runs[i].Stats.ServerGitSHA = serverInfo.BuildInfo.GitVersion
 	r.Runs[i].Stats.Attributes = make(map[string]interface{})
+	r.Runs[i].Stats.Testbed.Type = "standalone"
+	r.Runs[i].Stats.Testbed.Servers.Mongod = make([]parser.ServerInfo, 1, 1)
+	r.Runs[i].Stats.Testbed.Servers.Mongod[0] = serverInfo
 
 	if len(r.Runs[i].Clients) == 0 {
 		// local
@@ -335,12 +346,21 @@ func (r *TheRun) RunClientTasks(i int, run_dir string) {
 		}
 	}()
 
+	go func() {
+		// to capture the /proc/$pid/stat here
+	}()
+
 	r.Runs[i].Stats.Start_Time.Date = time.Now().UnixNano() / int64(time.Millisecond)
 	err = cmd.Run()
 	if err != nil {
 		// do not quit if this client return error code FIXME
 		// log.Fatal("Hammer client failed with -> ", err)
 	}
+
+	go func() {
+		// to capture the /proc/$pid/stat here
+	}()
+
 	r.Runs[i].Stats.End_Time.Date = time.Now().UnixNano() / int64(time.Millisecond)
 
 	time.Sleep(5 * time.Second) //chill for 5 second to collect some system stats after test done
@@ -625,6 +645,7 @@ func summarizeFolder(folder string) {
 
 func init() {
 	flag.StringVar(&run, "run", "", "ID for the run")
+	//flag.BoolVar(&autorun, "auto", false, "Automatically generate ID for the run")
 	flag.StringVar(&config, "config", "", "Config JSON for the run")
 	flag.StringVar(&test, "test", "", "Suffix for the report folder")
 	flag.StringVar(&report_url, "report", "", "URL to report test results")

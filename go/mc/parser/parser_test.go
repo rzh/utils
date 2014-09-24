@@ -1,9 +1,6 @@
 package parser
 
-import (
-	"fmt"
-	"testing"
-)
+import "testing"
 
 func TestProcessSysbenchResult(t *testing.T) {
 	cum, trend, att := ProcessSysbenchResult("sysbench.txt")
@@ -110,12 +107,16 @@ func TestParsePIDStat(t *testing.T) {
 func TestParseMongoSIMStat(t *testing.T) {
 	r := ProcessMongoSIMResult("mongo-sim.txt")
 
-	if r.AllNodes.Op_throughput != 0 {
-		t.Error("mongo-sim op_throughput is ", r.AllNodes.Op_throughput, ", expecting 0")
+	if r.Summary.Nodes[0]["new_user"].Op_lat_total_micros != 2755 {
+		t.Error("mongo-sim op_throughput is ", r.Summary.Nodes[0]["new_user"].Op_lat_total_micros, ", expecting 2755")
 	}
-	if r.Nodes[0]["st_staging_minutes"].Op_count != 43500 {
-		t.Error("mongo-sim op_throughput is ", r.Nodes[0]["st_staging_minutes"].Op_count, ", expecting 100")
+	if r.Summary.Nodes[2]["post_message"].Op_count != 199 {
+		t.Error("mongo-sim op_count is ", r.Summary.Nodes[0]["post_message"].Op_count, ", expecting 199")
 	}
+
+	//s, _ := json.MarshalIndent(r, "  ", "    ")
+	//os.Stdout.Write(s)
+	//fmt.Println(len(r.Summary.Nodes))
 }
 
 func TestParseMongoPerfResult(t *testing.T) {
@@ -129,7 +130,7 @@ func TestParseMongoPerfResult(t *testing.T) {
 		t.Error("[mongo-perf] receive wrong number of results, received ", len(r), " expecting 12")
 	}
 
-	fmt.Println(r)
+	//fmt.Println(r)
 
 	if r["Geo.within.center_TH-001"].Result != 928.11 {
 		t.Error("[mongo-perf] receive wrong value of results, received ", r["Geo.within.center_TH-001"].Result, " expecting 928.11")

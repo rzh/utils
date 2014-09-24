@@ -13,9 +13,16 @@ import (
 	"github.com/rzh/utils/go/mc/parser"
 )
 
+/*
 type Testbed struct {
 	Type    string                       `json:type`
 	Servers map[string]map[string]string `json:"servers"`
+}
+
+type TestDriver struct {
+	Version   string `json:version`
+	GitSHA    string `json:git_hash`
+	BuildDate string `json:build_date`
 }
 
 type DateTime struct {
@@ -30,6 +37,7 @@ type Stats struct {
 	ServerGitSHA  string                 `json:"server_git_hash"`
 	Attributes    map[string]interface{} `json:"attributes"`
 	Testbed       Testbed                `json:"test_bed"`
+	TestDriver    TestDriver             `json:"test_driver"`
 	Summary       parser.StatsSummary    `json:"summary"`
 
 	// TPS string
@@ -41,6 +49,7 @@ type Stats struct {
 	History      []string
 	Server_Stats map[string]parser.ServerStats `json:"server_stats"`
 }
+*/
 
 func replaceDot(s string) string {
 	return strings.Replace(s, ".", "_", -1)
@@ -79,8 +88,8 @@ func (r *TheRun) reportResults(run_id int, log_file string, run_dir string) {
 		Type: rr.Type}
 
 	if report_url == "" {
-		// report_url = "http://54.68.84.192:8080/api/v1/results"
-		report_url = "http://dyno.mongodb.parts/api/v1/results"
+		report_url = "http://54.68.84.192:8080/api/v1/results"
+		// report_url = "http://dyno.mongodb.parts/api/v1/results"
 	}
 	var err error
 	switch t {
@@ -105,7 +114,18 @@ func (r *TheRun) reportResults(run_id int, log_file string, run_dir string) {
 		log.Println("Processing mongo-sim results")
 		result_ := parser.ProcessMongoSIMResult(log_file)
 
-		r.Runs[run_id].Stats.Summary = result_
+		// need merge the two Stats together. Will copy
+		r.Runs[run_id].Stats.Summary = result_.Summary
+		// r.Runs[run_id].Stats.Testbed = result_.Testbed
+		r.Runs[run_id].Stats.TestDriver = result_.TestDriver
+
+		// merge attributes together
+		for k, v := range result_.Attributes {
+			if val, ok := r.Runs[run_id].Stats.Attributes[k]; ok {
+				log.Println("Discard hammer-mc attribute[", k, "] = ", val, " with new value from mongo-sim ", v)
+			}
+			r.Runs[run_id].Stats.Attributes[k] = v
+		}
 
 	case "mongo-perf":
 		log.Println("Processing mongo-perf results")
@@ -175,12 +195,15 @@ func (r *TheRun) reportResults(run_id int, log_file string, run_dir string) {
 	s, _ := json.MarshalIndent(r.Runs[run_id].Stats, "  ", "    ")
 	if report_url != "" {
 		// report to report_url if it is not empty
-		r, err := http.Post(report_url, "application/json", bytes.NewBuffer(s))
 
-		if err == nil {
-			log.Println("Submit result to server, reponse: ", r)
-		} else {
-			log.Panicln("Submit results failed with error: ", err)
+		for _, rurl := range strings.Fields(report_url) {
+			r, err := http.Post(rurl, "application/json", bytes.NewBuffer(s))
+
+			if err == nil {
+				log.Println("Submit results to server [", rurl, "] succeeded with reponse:\n", r)
+			} else {
+				log.Panicln("Submit results to server [", rurl, "] failed with error: ", err)
+			}
 		}
 	}
 

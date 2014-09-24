@@ -129,6 +129,56 @@ type NodeStats struct {
 	Op_lat_avg_95th      int64   `json:"op_lat_avg_95th"`
 	Op_lat_avg_99th      int64   `json:"op_lat_avg_99th"`
 	Op_lat_total_micros  int64   `json:"op_lat_total_micros"`
+	Exhaust_avg_micros   int64   `json:"exhaust_avg_micros"`
+	Exhaust_count        int64   `json:"exhaust_count"`
+	Exhaust_errors       int64   `json:"exhaust_errors"`
+	Exhaust_max_micros   int64   `json:"exhaust_max_micros"`
+	Exhaust_min_micros   int64   `json:"exhaust_min_micros"`
+	Exhaust_retries      int64   `json:"exhaust_retries"`
+	Exhaust_retry_avg    int64   `json:"exhaust_retry_avg"`
+	Exhaust_retry_micros int64   `json:"exhaust_retry_micros"`
+	Exhaust_total_micros int64   `json:"exhaust_total_micros"`
+	Exhaust_variance     int64   `json:"exhaust_variance"`
+	Insert_avg_micros    int64   `json:"insert_avg_micros"`
+	Insert_count         int64   `json:"insert_count"`
+	Insert_errors        int64   `json:"insert_errors"`
+	Insert_max_micros    int64   `json:"insert_max_micros"`
+	Insert_min_micros    int64   `json:"insert_min_micros"`
+	Insert_retries       int64   `json:"insert_retries"`
+	Insert_retry_avg     int64   `json:"insert_retry_avg"`
+	Insert_retry_micros  int64   `json:"insert_retry_micros"`
+	Insert_total_micros  int64   `json:"insert_total_micros"`
+	Insert_variancy      int64   `json:"insert_variance"`
+	Query_avg_micros     int64   `json:"query_avg_micros"`
+	Query_count          int64   `json:"query_count"`
+	Query_errors         int64   `json:"query_errors"`
+	Query_max_micros     int64   `json:"query_max_micros"`
+	Query_min_micros     int64   `json:"query_min_micros"`
+	Query_retries        int64   `json:"query_retries"`
+	Query_retry_avg      int64   `json:"query_retry_avg"`
+	Query_retry_micros   int64   `json:"query_retry_micros"`
+	Query_total_micros   int64   `json:"query_total_micros"`
+	Query_variance       int64   `json:"query_variance"`
+	Remove_avg_micros    int64   `json:"remove_avg_micros"`
+	Remove_count         int64   `json:"remove_count"`
+	Remove_errors        int64   `json:"remove_errors"`
+	Remove_max_micros    int64   `json:"remove_max_micros"`
+	Remove_min_micros    int64   `json:"remove_min_micros"`
+	Remove_retries       int64   `json:"remove_retries"`
+	Remove_retry_avg     int64   `json:"remove_retry_avg"`
+	Remove_retry_micros  int64   `json:"remove_retry_micros"`
+	Remove_total_micros  int64   `json:"remove_total_micros"`
+	Remove_variance      int64   `json:"remove_variance"`
+	Update_avg_micros    int64   `json:"update_avg_micros"`
+	Update_count         int64   `json:"update_count"`
+	Update_errors        int64   `json:"update_errors"`
+	Update_max_micros    int64   `json:"update_max_micros"`
+	Update_min_micros    int64   `json:"update_min_micros"`
+	Update_retries       int64   `json:"update_retries"`
+	Update_retry_avg     int64   `json:"update_retry_avg"`
+	Update_retry_micros  int64   `json:"update_retry_micros"`
+	Update_total_micros  int64   `json:"update_total_micros"`
+	Update_variance      int64   `json:"update_variance"`
 }
 
 type StatsSummary struct {

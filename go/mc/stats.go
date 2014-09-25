@@ -88,8 +88,8 @@ func (r *TheRun) reportResults(run_id int, log_file string, run_dir string) {
 		Type: rr.Type}
 
 	if report_url == "" {
-		report_url = "http://54.68.84.192:8080/api/v1/results"
-		// report_url = "http://dyno.mongodb.parts/api/v1/results"
+		// report_url = "http://54.68.84.192:8080/api/v1/results"
+		report_url = "http://dyno.mongodb.parts/api/v1/results"
 	}
 	var err error
 	switch t {

@@ -173,9 +173,29 @@ func (r *TheRun) findMongoD_CMD(server string) string {
 	return ""
 }
 
+func cleanup(lines []string) []string {
+	// need take out lines has ISODate here, not standard JSON.
+	re := regexp.MustCompile(": ISODate")
+	reNum := regexp.MustCompile(": NumberLong")
+	for i := 0; i < len(lines); i++ {
+		if re.MatchString(lines[i]) {
+			// remove this line, and reset i to i-1
+			lines = append(lines[:i], lines[i+1:]...)
+			i = i - 1
+		} else if reNum.MatchString(lines[i]) {
+			ss := str.Replace(lines[i], "NumberLong", "", -1)
+			ss = str.Replace(ss, "(", "", -1)
+			ss = str.Replace(ss, ")", "", -1)
+			lines[i] = ss
+		}
+	}
+	return lines
+}
+
 func (r *TheRun) findMongoD_Info(run_id int) parser.ServerInfo {
 	var buildInfo parser.MongodBuildInfo
 	var hostInfo parser.MongoHostInfo
+	var storageEngine parser.StorageEngineInfo
 
 	var server string
 
@@ -211,22 +231,7 @@ func (r *TheRun) findMongoD_Info(run_id int) parser.ServerInfo {
 
 	lines = str.Split(string(output), "\n")
 
-	// need take out lines has ISODate here, not standard JSON.
-	re := regexp.MustCompile(": ISODate")
-	reNum := regexp.MustCompile(": NumberLong")
-	for i := 0; i < len(lines); i++ {
-		if re.MatchString(lines[i]) {
-			// remove this line, and reset i to i-1
-			lines = append(lines[:i], lines[i+1:]...)
-			i = i - 1
-		} else if reNum.MatchString(lines[i]) {
-			ss := str.Replace(lines[i], "NumberLong", "", -1)
-			ss = str.Replace(ss, "(", "", -1)
-			ss = str.Replace(ss, ")", "", -1)
-			lines[i] = ss
-		}
-
-	}
+	lines = cleanup(lines)
 
 	err = json.Unmarshal([]byte(str.Join(lines[3:], "\n")), &hostInfo)
 	if err != nil {
@@ -235,7 +240,30 @@ func (r *TheRun) findMongoD_Info(run_id int) parser.ServerInfo {
 
 	fmt.Printf("%# v\n", pretty.Formatter(hostInfo))
 
-	return parser.ServerInfo{BuildInfo: buildInfo, HostInfo: hostInfo}
+	// not get storageEngine information
+	output, err = r.runServerCmd(server,
+		"~/mongo --norc --eval \"print('storageEngine');printjson(db.serverStatus().storageEngine)\"")
+
+	if err != nil {
+		log.Panicln("Failed to find storageEngine for server [", server, "] with error [", err, "]")
+	}
+
+	lines = str.Split(string(output), "\n")
+
+	lines = cleanup(lines)
+
+	if lines[3] == "undefined" {
+		// FIXME need a better name here, discuss with Lucas
+		storageEngine.Name = "undefined"
+	} else {
+		err = json.Unmarshal([]byte(str.Join(lines[3:], "\n")), &storageEngine)
+		if err != nil {
+			log.Panicln("Cannot unmarshal hostInfo with error: ", err, "\n\n", string(output))
+		}
+	}
+	fmt.Printf("%# v\n", pretty.Formatter(storageEngine))
+
+	return parser.ServerInfo{BuildInfo: buildInfo, HostInfo: hostInfo, StorageEngine: storageEngine}
 }
 
 func (r *TheRun) findMongoD_PID(server string) string {

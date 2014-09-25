@@ -109,9 +109,14 @@ type MongodBuildInfo struct {
 	Debug            bool   `json:"debug"`
 }
 
+type StorageEngineInfo struct {
+	Name string `json:"name"`
+}
+
 type ServerInfo struct {
-	HostInfo  MongoHostInfo   `json:"hostinfo"`
-	BuildInfo MongodBuildInfo `json:"serverinfo"`
+	HostInfo      MongoHostInfo     `json:"hostinfo"`
+	BuildInfo     MongodBuildInfo   `json:"serverinfo"`
+	StorageEngine StorageEngineInfo `json:"storageengine"`
 }
 
 type NodeStats struct {

@@ -40,7 +40,7 @@ Assume you already have working go environment setup, if not, please follow the 
 <pre>
 # go get github.com/rzh/utils/go/mc
 # go install github.com/rzh/utils/go/mc
-# mc -run test1
+# mc -run test1 -config run-sysbench.json
 </pre>
 
 # Configure Files

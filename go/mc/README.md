@@ -30,6 +30,8 @@
 
 In order to monitor the server, you need install sysstat, which will bring in pidstat and iostat.
 
+You also need symbol link mongo shell under your home directly. MC will use it to get mongod information. MongoD shall run with default port 27017 (we need improve this in the future)
+
 ## Client
 
 Nothing is required for the client

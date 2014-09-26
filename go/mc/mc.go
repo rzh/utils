@@ -254,7 +254,7 @@ func (r *TheRun) findMongoD_Info(run_id int) parser.ServerInfo {
 
 	if lines[3] == "undefined" {
 		// FIXME need a better name here, discuss with Lucas
-		storageEngine.Name = "undefined"
+		storageEngine.Name = "mmap_v0" // set to v0 for legacy version
 	} else {
 		err = json.Unmarshal([]byte(str.Join(lines[3:], "\n")), &storageEngine)
 		if err != nil {

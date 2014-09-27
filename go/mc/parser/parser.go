@@ -225,8 +225,11 @@ type Stats struct {
 
 	// TPS string
 	// Run_Date   string
-	Start_Time DateTime `json:"start_time"` //epoch time, time.Now().Unix()
-	End_Time   DateTime `json:"end_time"`
+	Start_Time  DateTime `json:"start_time"` //epoch time, time.Now().Unix()
+	End_Time    DateTime `json:"end_time"`
+	Utime       int      `json:"utime"`
+	Stime       int      `json:"stime"`
+	TestRunTime int64    `json:"test_run_time"`
 	// ID         string
 	// Type         string // hammertime, sysbench, mongo-sim
 	History      []string

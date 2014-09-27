@@ -115,7 +115,10 @@ func (r *TheRun) reportResults(run_id int, log_file string, run_dir string) {
 		result_ := parser.ProcessMongoSIMResult(log_file)
 
 		// need merge the two Stats together. Will copy
-		r.Runs[run_id].Stats.Summary = result_.Summary
+		//	r.Runs[run_id].Stats.Summary = result_.Summary
+		log.Printf("%# v\n", result_.Summary)
+		r.Runs[run_id].Stats.Summary.Nodes = make([]map[string]parser.NodeStats, 10, 10)
+		copy(r.Runs[run_id].Stats.Summary.Nodes, result_.Summary.Nodes)
 		// r.Runs[run_id].Stats.Testbed = result_.Testbed
 		r.Runs[run_id].Stats.TestDriver = result_.TestDriver
 

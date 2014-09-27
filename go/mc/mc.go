@@ -374,9 +374,18 @@ func (r *TheRun) RunClientTasks(i int, run_dir string) {
 		}
 	}()
 
-	go func() {
-		// to capture the /proc/$pid/stat here
-	}()
+	pid := r.findMongoD_PID(r.Runs[i].Servers[i])
+	var procstat_before, procstat_after string
+
+	// to capture the /proc/$pid/stat here
+	_procstat_before, _err := r.runServerCmd(r.Runs[i].Servers[i], "/bin/cat /proc/"+pid+"/stat")
+
+	if _err != nil {
+		procstat_before = "failed to get /proc stat before the run"
+	} else {
+		procstat_before = string(_procstat_before)
+	}
+	log.Println("Proc stat before test --> ", procstat_before)
 
 	r.Runs[i].Stats.Start_Time.Date = time.Now().UnixNano() / int64(time.Millisecond)
 	err = cmd.Run()
@@ -385,11 +394,29 @@ func (r *TheRun) RunClientTasks(i int, run_dir string) {
 		// log.Fatal("Hammer client failed with -> ", err)
 	}
 
-	go func() {
-		// to capture the /proc/$pid/stat here
-	}()
-
 	r.Runs[i].Stats.End_Time.Date = time.Now().UnixNano() / int64(time.Millisecond)
+
+	// to capture the /proc/$pid/stat here
+	_procstat_after, _err := r.runServerCmd(r.Runs[i].Servers[i], "/bin/cat /proc/"+pid+"/stat")
+
+	if _err != nil {
+		procstat_after = "failed to get /proc stat after the run"
+	} else {
+		procstat_after = string(_procstat_after)
+	}
+	log.Println("Proc stat after test --> ", procstat_after)
+
+	r.Runs[i].Stats.TestRunTime = r.Runs[i].Stats.End_Time.Date - r.Runs[i].Stats.Start_Time.Date
+
+	// FIXME check error here
+	utime_before, _ := strconv.Atoi(str.Fields(procstat_before)[13])
+	stime_before, _ := strconv.Atoi(str.Fields(procstat_before)[14])
+
+	utime_after, _ := strconv.Atoi(str.Fields(procstat_after)[13])
+	stime_after, _ := strconv.Atoi(str.Fields(procstat_after)[14])
+
+	r.Runs[i].Stats.Utime = utime_after - utime_before
+	r.Runs[i].Stats.Stime = stime_after - stime_before
 
 	time.Sleep(5 * time.Second) //chill for 5 second to collect some system stats after test done
 

@@ -1,6 +1,11 @@
 package parser
 
-import "testing"
+import (
+	"encoding/json"
+	"fmt"
+	"os"
+	"testing"
+)
 
 func TestProcessSysbenchResult(t *testing.T) {
 	cum, trend, att := ProcessSysbenchResult("sysbench.txt")
@@ -102,6 +107,20 @@ func TestParsePIDStat(t *testing.T) {
 	if dps.Mem[1] != 10.09 {
 		t.Error("Pidstat mem[1] is ", dps.Mem[1], " expecting 10.09")
 	}
+
+	// test a different format
+	dps = ParsePIDStat("pidstat2.txt")
+	if dps.Process != "mongod" {
+		t.Error("Pidstat process-type is " + dps.Process + " expecting mongod")
+	}
+
+	if dps.Cpu[0] != 29.09 {
+		t.Error("Pidstat cpu[0] is ", dps.Cpu[0], " expecting 29.09")
+	}
+
+	if dps.Mem[1] != 25.59 {
+		t.Error("Pidstat mem[1] is ", dps.Mem[1], " expecting 25.59")
+	}
 }
 
 func TestParseMongoSIMStat(t *testing.T) {
@@ -114,9 +133,9 @@ func TestParseMongoSIMStat(t *testing.T) {
 		t.Error("mongo-sim op_count is ", r.Summary.Nodes[0]["post_message"].Op_count, ", expecting 199")
 	}
 
-	//s, _ := json.MarshalIndent(r, "  ", "    ")
-	//os.Stdout.Write(s)
-	//fmt.Println(len(r.Summary.Nodes))
+	s, _ := json.MarshalIndent(r, "  ", "    ")
+	os.Stdout.Write(s)
+	fmt.Println(len(r.Summary.Nodes))
 }
 
 func TestParseMongoPerfResult(t *testing.T) {
@@ -131,6 +150,13 @@ func TestParseMongoPerfResult(t *testing.T) {
 	}
 
 	//fmt.Println(r)
+	if r["Geo.within.center_TH-001"].Version != "db version: 2.6.5-rc2-pre-" {
+		t.Error("[mongo-perf] receive wrong value of results, received ", r["Geo.within.center_TH-001"].Version, " expecting db version: 2.6.5-rc2-pre-")
+	}
+
+	if r["Geo.within.center_TH-001"].ClientVersion != "MongoDB shell version: 2.7.5-pre-" {
+		t.Error("[mongo-perf] receive wrong value of results, received ", r["Geo.within.center_TH-001"].ClientVersion, " expecting db version: 2.6.5-rc2-pre-")
+	}
 
 	if r["Geo.within.center_TH-001"].Result != 928.11 {
 		t.Error("[mongo-perf] receive wrong value of results, received ", r["Geo.within.center_TH-001"].Result, " expecting 928.11")

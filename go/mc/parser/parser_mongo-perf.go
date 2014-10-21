@@ -16,12 +16,13 @@ import (
 var debug = Debug("info")
 
 type MongoPerfResult struct {
-	Name    string
-	Thread  int64
-	Result  float64
-	CV      string
-	Version string
-	GitSHA  string
+	Name          string
+	Thread        int64
+	Result        float64
+	CV            string
+	Version       string
+	ClientVersion string
+	GitSHA        string
 }
 
 // to calculate stddev
@@ -68,6 +69,7 @@ func ProcessMongoPerfResult(file string) map[string]MongoPerfResult {
 	name := make(map[string]string)
 	sha := "" // db_version, git_sha
 	db_version := ""
+	client_version := ""
 
 	f, err := os.Open(file)
 	if err != nil {
@@ -84,7 +86,23 @@ func ProcessMongoPerfResult(file string) map[string]MongoPerfResult {
 		// check whether it is db version
 		// format:
 		//    db version: 2.7.5
-		if match, err := regexp.MatchString("^db version: [0-9.]+$", scan.Text()); match && err == nil {
+		if match, err := regexp.MatchString("^MongoDB shell version: ", scan.Text()); match && err == nil {
+			// found db version
+
+			if client_version == "" {
+				client_version = scan.Text()
+			} else {
+				// make db_version is the same
+				if client_version != scan.Text() {
+					log.Fatalln("DB version is different from log file. Got " + client_version + " and " + scan.Text())
+				}
+			}
+
+			continue
+		}
+
+		// if match, err := regexp.MatchString("^db version: [0-9.prec]+$", scan.Text()); match && err == nil {
+		if match, err := regexp.MatchString("^db version: ", scan.Text()); match && err == nil {
 			// found db version
 
 			if db_version == "" {
@@ -168,12 +186,13 @@ func ProcessMongoPerfResult(file string) map[string]MongoPerfResult {
 		cvs[k] = cvStr(data[k])
 
 		result[k] = MongoPerfResult{
-			GitSHA:  sha,
-			Result:  re[k],
-			CV:      cvs[k],
-			Name:    name[k],
-			Version: db_version,
-			Thread:  thread[k]}
+			GitSHA:        sha,
+			Result:        re[k],
+			CV:            cvs[k],
+			Name:          name[k],
+			Version:       db_version,
+			ClientVersion: client_version,
+			Thread:        thread[k]}
 	}
 
 	//return re, cvs, db_version + " | SHA: " + sha

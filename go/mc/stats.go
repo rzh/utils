@@ -87,9 +87,9 @@ func (r *TheRun) reportResults(run_id int, log_file string, run_dir string) {
 		Client_logs: rr.Client_logs, Server_logs: rr.Server_logs,
 		Type: rr.Type}
 
-	if report_url == "" {
-		// report_url = "http://54.68.84.192:8080/api/v1/results"
-		report_url = "http://dyno.mongodb.parts/api/v1/results"
+	if len(report_url) == 0 {
+		report_url = append(report_url, "http://54.68.84.192:8080/api/v1/results")
+		report_url = append(report_url, "http://dyno.mongodb.parts/api/v1/results")
 	}
 	var err error
 	switch t {
@@ -110,13 +110,29 @@ func (r *TheRun) reportResults(run_id int, log_file string, run_dir string) {
 			r.Runs[run_id].Stats.Attributes[k] = v
 		}
 
+	case "sysbench-insert":
+		log.Println("Process sysbench results")
+		cum, history, att := parser.ProcessSysbenchInsertResult(log_file)
+
+		// r.Runs[run_id].Stats.TPS = cum
+		r.Runs[run_id].Stats.Summary.AllNodes.Op_throughput, err = strconv.ParseFloat(strings.Replace(cum, ",", "", -1), 64)
+		if err != nil {
+			log.Panicln("Error parsing op_throughput ", cum, ", error: ", err)
+		}
+
+		r.Runs[run_id].Stats.History = history
+
+		// merge attribute into Stats
+		for k, v := range att {
+			r.Runs[run_id].Stats.Attributes[k] = v
+		}
 	case "mongo-sim":
 		log.Println("Processing mongo-sim results")
 		result_ := parser.ProcessMongoSIMResult(log_file)
 
 		// need merge the two Stats together. Will copy
 		//	r.Runs[run_id].Stats.Summary = result_.Summary
-		log.Printf("%# v\n", result_.Summary)
+		// log.Printf("%# v\n", result_.Summary)
 		r.Runs[run_id].Stats.Summary.Nodes = make([]map[string]parser.NodeStats, 10, 10)
 		copy(r.Runs[run_id].Stats.Summary.Nodes, result_.Summary.Nodes)
 		// r.Runs[run_id].Stats.Testbed = result_.Testbed
@@ -148,6 +164,7 @@ func (r *TheRun) reportResults(run_id int, log_file string, run_dir string) {
 			r.Runs[run_id].Stats.Workload = v.Name
 			r.Runs[run_id].Stats.Attributes["nThread"] = v.Thread
 			r.Runs[run_id].Stats.Attributes["CV"] = v.CV
+			fmt.Println("server version is :", v.Version)
 			r.Runs[run_id].Stats.ServerVersion = strings.Fields(v.Version)[2]
 			r.Runs[run_id].Stats.ServerGitSHA = v.GitSHA
 			r.Runs[run_id].Stats.Summary.AllNodes.Op_throughput = v.Result
@@ -158,14 +175,16 @@ func (r *TheRun) reportResults(run_id int, log_file string, run_dir string) {
 			fmt.Println("\n********")
 
 			// report to server
-			if report_url != "" {
+			if len(report_url) != 0 {
 				// report to report_url if it is not empty
-				r, err := http.Post(report_url, "application/json", bytes.NewBuffer(s))
+				for _, rurl_ := range report_url {
+					r, err := http.Post(rurl_, "application/json", bytes.NewBuffer(s))
 
-				if err == nil {
-					log.Println("Submit results to server succeeded with reponse:\n", r)
-				} else {
-					log.Panicln("Submit results failed with error: ", err)
+					if err == nil {
+						log.Println("Submit results to server succeeded with reponse:\n", r)
+					} else {
+						log.Panicln("Submit results failed with error: ", err)
+					}
 				}
 			}
 		}
@@ -173,8 +192,15 @@ func (r *TheRun) reportResults(run_id int, log_file string, run_dir string) {
 		// mongo-perf will not report server stats since it is not meaningful
 		return
 
+	case "task":
+		// will not report task
+		return
+
 	default:
 		log.Println("no type infor, ignore results analyzing")
+
+		// not return results
+		return
 	}
 
 	// report pidstat here
@@ -192,14 +218,15 @@ func (r *TheRun) reportResults(run_id int, log_file string, run_dir string) {
 		//r.Runs[run_id].Stats.Server_Stats[replaceDot(r.Runs[run_id].Servers[k])].Cpu = make([]parser.DataPoint, len(stats["cpu"]), len(stats["cpu"]))
 		// copy(r.Runs[run_id].Stats.Server_Stats[replaceDot(r.Runs[run_id].Servers[k])].Cpu, stats["cpu"])
 		r.Runs[run_id].Stats.Server_Stats[replaceDot(r.Runs[run_id].Servers[k])] = stats
-		log.Println(r.Runs[run_id].Stats.Server_Stats[replaceDot(r.Runs[run_id].Servers[k])])
+		// log.Println(r.Runs[run_id].Stats.Server_Stats[replaceDot(r.Runs[run_id].Servers[k])])
 	}
 
+	r.Runs[run_id].Stats.Throughput = r.Runs[run_id].Stats.Summary.AllNodes.Op_throughput
 	s, _ := json.MarshalIndent(r.Runs[run_id].Stats, "  ", "    ")
-	if report_url != "" {
+	if len(report_url) != 0 {
 		// report to report_url if it is not empty
 
-		for _, rurl := range strings.Fields(report_url) {
+		for _, rurl := range report_url {
 			r, err := http.Post(rurl, "application/json", bytes.NewBuffer(s))
 
 			if err == nil {

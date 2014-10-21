@@ -73,6 +73,32 @@ type MongoHostInfo struct {
 }
 
 /*
+	{
+        "opcounters" : {
+                "insert" : 30482408,
+                "query" : 71843659,
+                "update" : 44281266,
+                "delete" : 0,
+                "getmore" : 5904187,
+                "command" : 1438082
+        },
+	...
+	}
+*/
+
+type MongoServerStatus struct {
+	Opcounters struct {
+		Insert  int64 `json:"insert"`
+		Query   int64 `json:"query"`
+		Update  int64 `json:"update"`
+		Delete  int64 `json:"delete"`
+		GetMore int64 `json:"getmore"`
+		Command int64 `json:"command"`
+	} `json:"opcounters"`
+	// StorageEngine StorageEngineInfo `json:"storageengine"`
+}
+
+/*
 > db.serverBuildInfo()
 {
 	"version" : "2.6.3",
@@ -120,7 +146,7 @@ type ServerInfo struct {
 }
 
 type NodeStats struct {
-	Total_time_micros    int64   `json:"total_time_micros"`
+	Total_time_micros    int64   `json:"total_time_micros,omitempty"`
 	Op_throughput        float64 `json:"op_throughput,omitempty"`
 	Op_count             int64   `json:"op_count,omitempty"`
 	Op_errors            int64   `json:"op_errors,omitempty"`
@@ -205,7 +231,7 @@ type Testbed struct {
 type TestDriver struct {
 	Version   string `json:"version"`
 	GitSHA    string `json:"git_hash"`
-	BuildDate string `json:"build_datei"`
+	BuildDate string `json:"build_date"`
 }
 
 type DateTime struct {
@@ -218,6 +244,7 @@ type Stats struct {
 	Workload      string                 `json:"workload"`
 	ServerVersion string                 `json:"server_version"`
 	ServerGitSHA  string                 `json:"server_git_hash"`
+	StorageEngine string                 `json:"storageengine"`
 	Attributes    map[string]interface{} `json:"attributes"`
 	Testbed       Testbed                `json:"testbed"`
 	TestDriver    TestDriver             `json:"test_driver"`
@@ -229,6 +256,9 @@ type Stats struct {
 	End_Time    DateTime `json:"end_time"`
 	Utime       int      `json:"utime"`
 	Stime       int      `json:"stime"`
+	TotalOps    int64    `json:"total_ops"`
+	TickPerOp   float64  `json:"tick_per_op"`
+	Throughput  float64  `json:"throughput"`
 	TestRunTime int64    `json:"test_run_time"`
 	// ID         string
 	// Type         string // hammertime, sysbench, mongo-sim
@@ -338,6 +368,85 @@ func ProcessSysbenchResult(file string) (string, []string, map[string]string) {
 	return cum, trend, att
 }
 
+func ProcessSysbenchInsertResult(file string) (string, []string, map[string]string) {
+	var cum string
+	var trend []string
+	att := make(map[string]string)
+
+	att["test-type"] = "sysbench-insert"
+
+	f, err := ioutil.ReadFile(file)
+
+	if err != nil {
+		log.Fatal("cannot open file " + file)
+	}
+
+	lines := strings.Split(string(f), "\n")
+
+	// find thread in this format : writer threads           = 64
+
+	find_parameter := func(lines []string, pattern string) string {
+		var re string
+		re_thread := regexp.MustCompile(pattern)
+
+		for i := 0; i < len(lines); i++ {
+			t := re_thread.FindStringSubmatch(lines[i])
+
+			if len(t) > 0 {
+				if re == "" || re == lines[i] {
+					re = t[1]
+				} else {
+					log.Panicln("[sysbecn-parser] Found different writer threads number: ", lines[i], " vs ", re)
+				}
+			}
+		}
+
+		if re == "" {
+			log.Panicf("Failed to find value for regexp: %s", pattern)
+		}
+		return re
+	}
+
+	att["nThreads"] = find_parameter(lines, "writer threads[ ]+= ([0-9]+)")
+	att["nCollections"] = find_parameter(lines, "collections[ ]+= ([0-9]+)")
+	att["nCollectionSize"] = find_parameter(lines, "documents per collection[ ]+= ([0-9,]+)")
+	att["nFeedbackSeconds"] = find_parameter(lines, "feedback seconds[ ]+= ([0-9]+)")
+	att["nRunSeconds"] = find_parameter(lines, "run seconds[ ]+= ([0-9]+)")
+	att["oltp range size"] = find_parameter(lines, "oltp range size[ ]+= ([0-9]+)")
+	att["oltp point selects"] = find_parameter(lines, "oltp point selects[ ]+= ([0-9]+)")
+	att["oltp simple ranges"] = find_parameter(lines, "oltp simple ranges[ ]+= ([0-9]+)")
+	att["oltp sum ranges"] = find_parameter(lines, "oltp sum ranges[ ]+= ([0-9]+)")
+	att["oltp order ranges"] = find_parameter(lines, "oltp order ranges[ ]+= ([0-9]+)")
+	att["oltp distinct ranges"] = find_parameter(lines, "oltp distinct ranges[ ]+= ([0-9]+)")
+	att["oltp index updates"] = find_parameter(lines, "oltp index updates[ ]+= ([0-9]+)")
+	att["oltp non index updates"] = find_parameter(lines, "oltp non index updates[ ]+= ([0-9]+)")
+	att["write concern"] = find_parameter(lines, "write concern[ ]+= ([A-Z]+)")
+
+	re := regexp.MustCompile("seconds : cum tps=[0-9.,]+ : int tps=[0-9.,]+ : cum ips=([0-9.,]+) : int ips=([0-9.,]+)")
+
+	// find the cumulative number
+	for i := len(lines) - 1; i >= 0; i-- {
+		t := re.FindStringSubmatch(lines[i])
+		if len(t) > 0 {
+			cum = t[1]
+			break
+		} else {
+			// no match, just skip
+		}
+	}
+
+	// get the historical interval number
+	for i := 0; i < len(lines); i++ {
+		t := re.FindStringSubmatch(lines[i])
+		if len(t) > 0 {
+			trend = append(trend, t[2])
+		} else {
+			// no match, just skip
+		}
+	}
+	return cum, trend, att
+}
+
 type ServerStats struct {
 	Process string    `json:"process "`
 	Ts      []int64   `json:"ts"`
@@ -355,6 +464,9 @@ func ParsePIDStat(file string) ServerStats {
 	var ts []int64
 
 	var cpu_loc, mem_loc int
+
+	cpu_loc = -1
+	mem_loc = -1
 
 	process := ""
 
@@ -377,7 +489,7 @@ func ParsePIDStat(file string) ServerStats {
 
 	for i := 0; i < len(lines); i++ {
 		if re.MatchString(lines[i]) {
-			if cpu_loc == 0 {
+			if cpu_loc == -1 {
 				// let's figure out location of %CPU and %MEM
 				t := strings.Fields(lines[i])
 
@@ -397,11 +509,15 @@ func ParsePIDStat(file string) ServerStats {
 				// take Datapoint
 				dps := strings.Fields(lines[i])
 
-				if len(dps) != 21 {
-					// the line is either wrong format of truncated
-					log.Fatalf("Error parsing pidstat, line =(%s), wrong number of data %d",
-						lines[i], len(dps))
-				}
+				// fmt.Println("cpu loc: ", cpu_loc, "  | mem loc: ", mem_loc)
+
+				/*
+					if len(dps) != 21 {
+						// the line is either wrong format of truncated
+						log.Fatalf("Error parsing pidstat, line =(%s), wrong number of data %d",
+							lines[i], len(dps))
+					}
+				*/
 
 				// now take data
 				f, err := strconv.ParseFloat(dps[cpu_loc], 64)
@@ -428,7 +544,6 @@ func ParsePIDStat(file string) ServerStats {
 				}
 
 				ts = append(ts, t)
-
 			}
 		}
 	}

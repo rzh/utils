@@ -1,0 +1,22 @@
+{
+	"PemFile": "",
+	"runs": [
+		{
+			"run_id": "sysbench_insert",
+			"clients": ["rzhang@slave-7.perf.ny.cbi.10gen.cc"],
+			"client_logs": [],
+			"servers": ["rzhang@slave-7.perf.ny.cbi.10gen.cc"],
+			"server_logs": [],
+			"type"  : "sysbench-insert",
+			"cmd": "cd sysbench-mongodb; taskset 0xF0 ./run.simple.insert.bash yes no 100"
+		}, 
+		{
+			"run_id": "sysbench_query",
+			"clients": ["rzhang@slave-7.perf.ny.cbi.10gen.cc"],
+			"client_logs": [],
+			"servers": ["rzhang@slave-7.perf.ny.cbi.10gen.cc"],
+			"server_logs": [],
+			"type"  : "sysbench",
+			"cmd": "cd sysbench-mongodb; taskset 0xF0 ./run.simple.test.bash no yes 100"
+		} 
+	]}

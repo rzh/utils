@@ -43,7 +43,7 @@ var (
 	autorun    bool
 	config     string
 	test       string
-	report_url string
+	report_url []string
 )
 
 const report_folder string = "reports"
@@ -112,15 +112,16 @@ func (p *Task) Cleanup() {
 // end of Task
 
 type HammerTask struct {
-	Run_id        string   `json:run_id`
-	Cmd           string   `json:cmd`
-	Hammer_folder string   `json:hammer_folder`
-	Clients       []string `json:clients`
-	Servers       []string `json:servers`
+	Run_id        string   `json:"run_id"`
+	Cmd           string   `json:"cmd"`
+	Hammer_folder string   `json:"hammer_folder"`
+	Clients       []string `json:"clients"`
+	Servers       []string `json:"servers"`
+	Testbed       string   `json:"testbed",omitempty`
 
 	// log files to be collected from client and server
-	Client_logs []string `json:client_logs`
-	Server_logs []string `json:server_logs`
+	Client_logs []string `json:"client_logs"`
+	Server_logs []string `json:"server_logs"`
 
 	Type string `json:type`
 
@@ -128,9 +129,10 @@ type HammerTask struct {
 }
 
 type TheRun struct {
-	tasks   []Task
-	Runs    []HammerTask `json:runs`
-	PemFile string       `json:PemFile`
+	tasks   []Task       `json:"Tasks"`
+	Runs    []HammerTask `json:"runs"`
+	PemFile string       `json:"PemFile",omitempty`
+	Testbed string       `json:"testbed",omitempty`
 
 	MongoDBPath        string
 	MongoStagingDBPath string
@@ -192,12 +194,30 @@ func cleanup(lines []string) []string {
 	return lines
 }
 
+func (r *TheRun) runMongoCMD(server, cmd string) []byte {
+	output, err := r.runServerCmd(server,
+		"~/mongo --norc --eval \"print('serverBuildInfo');printjson("+cmd+")\"")
+
+	if err != nil {
+		log.Panicln("Failed to run {", cmd, "} from server [", server, "] with error [", err, "]")
+	}
+
+	lines := str.Split(string(output), "\n")
+	lines = cleanup(lines) // take out non-JSON format
+
+	if lines[3] == "undefined" {
+		return nil
+	}
+	return []byte(str.Join(lines[3:], "\n"))
+}
+
 func (r *TheRun) findMongoD_Info(run_id int) parser.ServerInfo {
 	var buildInfo parser.MongodBuildInfo
 	var hostInfo parser.MongoHostInfo
 	var storageEngine parser.StorageEngineInfo
 
 	var server string
+	var err error
 
 	if len(r.Runs[0].Servers) > 0 {
 		server = r.Runs[run_id].Servers[0]
@@ -205,62 +225,75 @@ func (r *TheRun) findMongoD_Info(run_id int) parser.ServerInfo {
 		server = ""
 	}
 
-	// FIXME: need find where is mongo executable here. right not, just use a symbol link.
-	output, err := r.runServerCmd(server,
-		"~/mongo --norc --eval \"print('serverBuildInfo');printjson(db.serverBuildInfo())\"")
+	// FIXME: need find where is mongo executable here. right now, just use a symbol link.
 
+	// -- serverBuildInfo
+	/*
+		output, err := r.runServerCmd(server,
+			"~/mongo --norc --eval \"print('serverBuildInfo');printjson(db.serverBuildInfo())\"")
+
+		if err != nil {
+			log.Panicln("Failed to find serverBuildInfo for server [", server, "] with error [", err, "]")
+		}
+
+		lines := str.Split(string(output), "\n")
+	*/
+
+	output_ := r.runMongoCMD(server, "db.serverBuildInfo()")
+	err = json.Unmarshal(output_, &buildInfo)
 	if err != nil {
-		log.Panicln("Failed to find serverBuildInfo for server [", server, "] with error [", err, "]")
-	}
-
-	lines := str.Split(string(output), "\n")
-
-	err = json.Unmarshal([]byte(str.Join(lines[3:], "\n")), &buildInfo)
-	if err != nil {
-		log.Panicln("Cannot unmarshal serverBuildInfo with error: ", err)
+		log.Panicln("Cannot unmarshal serverBuildInfo with error: ", err, "\n\n", string(output_))
 	}
 
 	fmt.Printf("%# v\n", pretty.Formatter(buildInfo))
 
-	output, err = r.runServerCmd(server,
-		"~/mongo --norc --eval \"print('hostInfo');printjson(db.hostInfo())\"")
+	// -- hostInfo
+
+	/*
+		output, err = r.runServerCmd(server,
+			"~/mongo --norc --eval \"print('hostInfo');printjson(db.hostInfo())\"")
+
+		if err != nil {
+			log.Panicln("Failed to find serverBuildInfo for server [", server, "] with error [", err, "]")
+		}
+
+		lines = str.Split(string(output), "\n")
+
+	*/
+
+	output_ = r.runMongoCMD(server, "db.hostInfo()")
+	err = json.Unmarshal(output_, &hostInfo)
 
 	if err != nil {
-		log.Panicln("Failed to find serverBuildInfo for server [", server, "] with error [", err, "]")
-	}
-
-	lines = str.Split(string(output), "\n")
-
-	lines = cleanup(lines)
-
-	err = json.Unmarshal([]byte(str.Join(lines[3:], "\n")), &hostInfo)
-	if err != nil {
-		log.Panicln("Cannot unmarshal hostInfo with error: ", err, "\n\n", string(output))
+		log.Panicln("Cannot unmarshal hostInfo with error: ", err, "\nOutput:\n", string(output_))
 	}
 
 	fmt.Printf("%# v\n", pretty.Formatter(hostInfo))
 
 	// not get storageEngine information
-	output, err = r.runServerCmd(server,
-		"~/mongo --norc --eval \"print('storageEngine');printjson(db.serverStatus().storageEngine)\"")
+	/*
+		output, err = r.runServerCmd(server,
+			"~/mongo --norc --eval \"print('storageEngine');printjson(db.serverStatus().storageEngine)\"")
 
-	if err != nil {
-		log.Panicln("Failed to find storageEngine for server [", server, "] with error [", err, "]")
-	}
-
-	lines = str.Split(string(output), "\n")
-
-	lines = cleanup(lines)
-
-	if lines[3] == "undefined" {
-		// FIXME need a better name here, discuss with Lucas
-		storageEngine.Name = "mmap_v0" // set to v0 for legacy version
-	} else {
-		err = json.Unmarshal([]byte(str.Join(lines[3:], "\n")), &storageEngine)
 		if err != nil {
-			log.Panicln("Cannot unmarshal hostInfo with error: ", err, "\n\n", string(output))
+			log.Panicln("Failed to find storageEngine for server [", server, "] with error [", err, "]")
+		}
+
+		lines = str.Split(string(output), "\n")
+
+		lines = cleanup(lines)
+	*/
+
+	output_ = r.runMongoCMD(server, "db.serverStatus().storageEngine")
+	if len(output_) == 0 {
+		storageEngine.Name = "mmapv0" // set to v0 for legacy version
+	} else {
+		err = json.Unmarshal(output_, &storageEngine)
+		if err != nil {
+			log.Panicln("Cannot unmarshal serverStatus with error: ", err, "\nOutput:\n", string(output_))
 		}
 	}
+
 	fmt.Printf("%# v\n", pretty.Formatter(storageEngine))
 
 	return parser.ServerInfo{BuildInfo: buildInfo, HostInfo: hostInfo, StorageEngine: storageEngine}
@@ -325,6 +358,7 @@ func (r *TheRun) RunClientTasks(i int, run_dir string) {
 	r.Runs[i].Stats.Testbed.Type = "standalone"
 	r.Runs[i].Stats.Testbed.Servers.Mongod = make([]parser.ServerInfo, 1, 1)
 	r.Runs[i].Stats.Testbed.Servers.Mongod[0] = serverInfo
+	r.Runs[i].Stats.StorageEngine = serverInfo.StorageEngine.Name
 
 	if len(r.Runs[i].Clients) == 0 {
 		// local
@@ -374,11 +408,18 @@ func (r *TheRun) RunClientTasks(i int, run_dir string) {
 		}
 	}()
 
-	pid := r.findMongoD_PID(r.Runs[i].Servers[i])
+	var serverStatus_before parser.MongoServerStatus
+	output_ := r.runMongoCMD(r.Runs[i].Servers[0], "db.serverStatus().opcounters")
+	err = json.Unmarshal(output_, &serverStatus_before.Opcounters)
+	if err != nil {
+		log.Panicln("Cannot unmarshal serverStatus with error: ", err, "\nOutput:\n", string(output_))
+	}
+
+	pid := r.findMongoD_PID(r.Runs[i].Servers[0])
 	var procstat_before, procstat_after string
 
 	// to capture the /proc/$pid/stat here
-	_procstat_before, _err := r.runServerCmd(r.Runs[i].Servers[i], "/bin/cat /proc/"+pid+"/stat")
+	_procstat_before, _err := r.runServerCmd(r.Runs[i].Servers[0], "/bin/cat /proc/"+pid+"/stat")
 
 	if _err != nil {
 		procstat_before = "failed to get /proc stat before the run"
@@ -397,7 +438,7 @@ func (r *TheRun) RunClientTasks(i int, run_dir string) {
 	r.Runs[i].Stats.End_Time.Date = time.Now().UnixNano() / int64(time.Millisecond)
 
 	// to capture the /proc/$pid/stat here
-	_procstat_after, _err := r.runServerCmd(r.Runs[i].Servers[i], "/bin/cat /proc/"+pid+"/stat")
+	_procstat_after, _err := r.runServerCmd(r.Runs[i].Servers[0], "/bin/cat /proc/"+pid+"/stat")
 
 	if _err != nil {
 		procstat_after = "failed to get /proc stat after the run"
@@ -405,6 +446,14 @@ func (r *TheRun) RunClientTasks(i int, run_dir string) {
 		procstat_after = string(_procstat_after)
 	}
 	log.Println("Proc stat after test --> ", procstat_after)
+
+	// take second serverStatus here
+	var serverStatus_after parser.MongoServerStatus
+	output_ = r.runMongoCMD(r.Runs[i].Servers[0], "db.serverStatus().opcounters")
+	err = json.Unmarshal(output_, &serverStatus_after.Opcounters)
+	if err != nil {
+		log.Panicln("Cannot unmarshal serverStatus with error: ", err, "\nOutput:\n", string(output_))
+	}
 
 	r.Runs[i].Stats.TestRunTime = r.Runs[i].Stats.End_Time.Date - r.Runs[i].Stats.Start_Time.Date
 
@@ -415,8 +464,28 @@ func (r *TheRun) RunClientTasks(i int, run_dir string) {
 	utime_after, _ := strconv.Atoi(str.Fields(procstat_after)[13])
 	stime_after, _ := strconv.Atoi(str.Fields(procstat_after)[14])
 
+	var findTotalOps = func(before, after parser.MongoServerStatus) int64 {
+		var t int64 = 0
+		t += after.Opcounters.Insert
+		t += after.Opcounters.Query
+		t += after.Opcounters.Update
+		t += after.Opcounters.Delete
+		t += after.Opcounters.GetMore
+		t += after.Opcounters.Command
+		t -= before.Opcounters.Insert
+		t -= before.Opcounters.Query
+		t -= before.Opcounters.Update
+		t -= before.Opcounters.Delete
+		t -= before.Opcounters.GetMore
+		t -= before.Opcounters.Command
+
+		return t
+	}
+
 	r.Runs[i].Stats.Utime = utime_after - utime_before
 	r.Runs[i].Stats.Stime = stime_after - stime_before
+	r.Runs[i].Stats.TotalOps = findTotalOps(serverStatus_before, serverStatus_after)
+	r.Runs[i].Stats.TickPerOp = float64(r.Runs[i].Stats.Utime+r.Runs[i].Stats.Stime) / float64(r.Runs[i].Stats.TotalOps)
 
 	time.Sleep(5 * time.Second) //chill for 5 second to collect some system stats after test done
 
@@ -699,11 +768,16 @@ func summarizeFolder(folder string) {
 }
 
 func init() {
+	var report_url_argv string
 	flag.StringVar(&run, "run", "", "ID for the run")
 	//flag.BoolVar(&autorun, "auto", false, "Automatically generate ID for the run")
 	flag.StringVar(&config, "config", "", "Config JSON for the run")
 	flag.StringVar(&test, "test", "", "Suffix for the report folder")
-	flag.StringVar(&report_url, "report", "", "URL to report test results")
+	flag.StringVar(&report_url_argv, "report", "", "URL to report test results")
+
+	if report_url_argv != "" {
+		report_url = str.Split(report_url_argv, ",")
+	}
 }
 
 func main() {

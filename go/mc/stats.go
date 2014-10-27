@@ -121,6 +121,7 @@ func (r *TheRun) reportResults(run_id int, log_file string, run_dir string) {
 		}
 
 		r.Runs[run_id].Stats.History = history
+		r.Runs[run_id].Stats.Harness = "sysbench" // still keep the same harness name
 
 		// merge attribute into Stats
 		for k, v := range att {

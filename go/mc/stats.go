@@ -57,17 +57,18 @@ func replaceDot(s string) string {
 
 // only used for clean report
 type HammerTask_ struct {
-	Run_id        string   `json:run_id`
-	Cmd           string   `json:cmd`
-	Hammer_folder string   `json:hammer_folder`
-	Clients       []string `json:clients`
-	Servers       []string `json:servers`
+	Run           string   `json:"run"`
+	Run_id        string   `json:"run_id"`
+	Cmd           string   `json:"cmd"`
+	Hammer_folder string   `json:"hammer_folder"`
+	Clients       []string `json:"clients"`
+	Servers       []string `json:"servers"`
 
 	// log files to be collected from client and server
-	Client_logs []string `json:client_logs`
-	Server_logs []string `json:server_logs`
+	Client_logs []string `json:"client_logs"`
+	Server_logs []string `json:"server_logs"`
 
-	Type string `json:type`
+	Type string `json:"type"`
 }
 
 func (r *TheRun) reportResults(run_id int, log_file string, run_dir string) {
@@ -85,7 +86,7 @@ func (r *TheRun) reportResults(run_id int, log_file string, run_dir string) {
 	r.Runs[run_id].Stats.Attributes["hammer-mc-cmd"] = HammerTask_{Run_id: rr.Run_id,
 		Cmd: rr.Cmd, Clients: rr.Clients, Servers: rr.Servers,
 		Client_logs: rr.Client_logs, Server_logs: rr.Server_logs,
-		Type: rr.Type}
+		Type: rr.Type, Run: run}
 
 	if len(report_url) == 0 {
 		report_url = append(report_url, "http://54.68.84.192:8080/api/v1/results")

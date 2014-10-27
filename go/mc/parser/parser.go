@@ -407,22 +407,23 @@ func ProcessSysbenchInsertResult(file string) (string, []string, map[string]stri
 		return re
 	}
 
-	att["nThreads"] = find_parameter(lines, "writer threads[ ]+= ([0-9]+)")
-	att["nCollections"] = find_parameter(lines, "collections[ ]+= ([0-9]+)")
-	att["nCollectionSize"] = find_parameter(lines, "documents per collection[ ]+= ([0-9,]+)")
-	att["nFeedbackSeconds"] = find_parameter(lines, "feedback seconds[ ]+= ([0-9]+)")
-	att["nRunSeconds"] = find_parameter(lines, "run seconds[ ]+= ([0-9]+)")
-	att["oltp range size"] = find_parameter(lines, "oltp range size[ ]+= ([0-9]+)")
-	att["oltp point selects"] = find_parameter(lines, "oltp point selects[ ]+= ([0-9]+)")
-	att["oltp simple ranges"] = find_parameter(lines, "oltp simple ranges[ ]+= ([0-9]+)")
-	att["oltp sum ranges"] = find_parameter(lines, "oltp sum ranges[ ]+= ([0-9]+)")
-	att["oltp order ranges"] = find_parameter(lines, "oltp order ranges[ ]+= ([0-9]+)")
-	att["oltp distinct ranges"] = find_parameter(lines, "oltp distinct ranges[ ]+= ([0-9]+)")
-	att["oltp index updates"] = find_parameter(lines, "oltp index updates[ ]+= ([0-9]+)")
-	att["oltp non index updates"] = find_parameter(lines, "oltp non index updates[ ]+= ([0-9]+)")
+	att["nThreads"] = find_parameter(lines, "([0-9]+) writer thread")
+	att["nCollections"] = find_parameter(lines, "([0-9]+) collections")
+	att["nCollectionSize"] = find_parameter(lines, "([0-9,]+) documents per collection")
+	att["nFeedbackSeconds"] = find_parameter(lines, "Feedback every ([0-9]+) seconds")
+	//att["nRunSeconds"] = find_parameter(lines, "run seconds[ ]+= ([0-9]+)")
+	//att["oltp range size"] = find_parameter(lines, "oltp range size[ ]+= ([0-9]+)")
+	//att["oltp point selects"] = find_parameter(lines, "oltp point selects[ ]+= ([0-9]+)")
+	//att["oltp simple ranges"] = find_parameter(lines, "oltp simple ranges[ ]+= ([0-9]+)")
+	//att["oltp sum ranges"] = find_parameter(lines, "oltp sum ranges[ ]+= ([0-9]+)")
+	//att["oltp order ranges"] = find_parameter(lines, "oltp order ranges[ ]+= ([0-9]+)")
+	//att["oltp distinct ranges"] = find_parameter(lines, "oltp distinct ranges[ ]+= ([0-9]+)")
+	//att["oltp index updates"] = find_parameter(lines, "oltp index updates[ ]+= ([0-9]+)")
+	//att["oltp non index updates"] = find_parameter(lines, "oltp non index updates[ ]+= ([0-9]+)")
 	att["write concern"] = find_parameter(lines, "write concern[ ]+= ([A-Z]+)")
 
-	re := regexp.MustCompile("seconds : cum tps=[0-9.,]+ : int tps=[0-9.,]+ : cum ips=([0-9.,]+) : int ips=([0-9.,]+)")
+	// Thread[Thread-2,5,main]1,494,000 inserts : 120 seconds : cum ips=12,445.96 : int ips=5,794.21
+	re := regexp.MustCompile("seconds : cum ips=([0-9.,]+) : int ips=([0-9.,]+)")
 
 	// find the cumulative number
 	for i := len(lines) - 1; i >= 0; i-- {

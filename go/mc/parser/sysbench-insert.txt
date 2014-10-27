@@ -1,0 +1,66 @@
+Note: src/jmongosysbenchload.java uses or overrides a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+Note: src/jmongosysbenchexecute.java uses or overrides a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+Thread[main,5,main]Application Parameters
+Thread[main,5,main]--------------------------------------------------
+Thread[main,5,main]  16 collections
+Thread[main,5,main]  database name = sbtest
+Thread[main,5,main]  8 writer thread(s)
+Thread[main,5,main]  10,000,000 documents per collection
+Thread[main,5,main]  Documents Per Insert = 1000
+Thread[main,5,main]  Feedback every 10 seconds(s)
+Thread[main,5,main]  Feedback every -1 inserts(s)
+Thread[main,5,main]  logging to file mongoSysbenchLoad-16-10000000-8.txt.tsv
+Thread[main,5,main]  write concern = SAFE
+Thread[main,5,main]  Server:Port = localhost:27017
+Thread[main,5,main]mongoOptions | MongoOptions{description='null', connectionsPerHost=2048, threadsAllowedToBlockForConnectionMultiplier=5, maxWaitTime=120000, connectTimeout=10000, socketTimeout=60000, socketKeepAlive=false, autoConnectRetry=false, maxAutoConnectRetryT
+ime=0, slaveOk=false, readPreference=primary, dbDecoderFactory=DefaultDBDecoder.DefaultFactory, dbEncoderFactory=DefaultDBEncoder.DefaultFactory, safe=false, w=0, wtimeout=0, fsync=false, j=false, socketFactory=javax.net.DefaultSocketFactory@4268d15, cursorFinalizerEnab
+led=true, writeConcern=WriteConcern { "getlasterror" : 1} / (Continue on error? false), alwaysUseMBeans=false, requiredReplicaSetName=null}
+Thread[main,5,main]mongoWriteConcern | WriteConcern { "getlasterror" : 1} / (Continue on error? false)
+Thread[main,5,main]  index technology = mongo
+Thread[main,5,main]--------------------------------------------------
+Thread[Thread-3,5,main]Writer thread 0 : creating collection sbtest1
+Thread[Thread-3,5,main]Writer thread 0 : creating collection sbtest1 secondary index
+
+Thread[Thread-5,5,main]Writer thread 2 : creating collection sbtest3
+Thread[Thread-6,5,main]Writer thread 3 : creating collection sbtest4
+Thread[Thread-5,5,main]Writer thread 2 : creating collection sbtest3 secondary index
+Thread[Thread-6,5,main]Writer thread 3 : creating collection sbtest4 secondary index
+Thread[Thread-7,5,main]Writer thread 4 : creating collection sbtest5
+
+Thread[Thread-10,5,main]Writer thread 7 : creating collection sbtest8
+Thread[Thread-4,5,main]Writer thread 1 : creating collection sbtest2
+Thread[main,5,main]  collection 9 is waiting for an available loader slot
+Thread[Thread-7,5,main]Writer thread 4 : creating collection sbtest5 secondary index
+Thread[Thread-8,5,main]Writer thread 5 : creating collection sbtest6
+Thread[Thread-4,5,main]Writer thread 1 : creating collection sbtest2 secondary index
+Thread[Thread-10,5,main]Writer thread 7 : creating collection sbtest8 secondary index
+
+Thread[Thread-8,5,main]Writer thread 5 : creating collection sbtest6 secondary index
+
+Thread[Thread-9,5,main]Writer thread 6 : creating collection sbtest7
+Thread[Thread-9,5,main]Writer thread 6 : creating collection sbtest7 secondary index
+Thread[Thread-6,5,main]Writer thread 3 : started to load collection sbtest4
+Thread[Thread-7,5,main]Writer thread 4 : started to load collection sbtest5
+Thread[Thread-5,5,main]Writer thread 2 : started to load collection sbtest3
+Thread[Thread-3,5,main]Writer thread 0 : started to load collection sbtest1
+Thread[Thread-8,5,main]Writer thread 5 : started to load collection sbtest6
+Thread[Thread-9,5,main]Writer thread 6 : started to load collection sbtest7
+Thread[Thread-4,5,main]Writer thread 1 : started to load collection sbtest2
+Thread[Thread-10,5,main]Writer thread 7 : started to load collection sbtest8
+Thread[Thread-2,5,main]420,000 inserts : 10 seconds : cum ips=41,924.54 : int ips=41,924.54
+Thread[Thread-2,5,main]619,000 inserts : 20 seconds : cum ips=30,903.64 : int ips=19,876.15
+Thread[Thread-2,5,main]759,000 inserts : 30 seconds : cum ips=25,265.47 : int ips=13,984.62
+Thread[Thread-2,5,main]876,000 inserts : 40 seconds : cum ips=21,871.57 : int ips=11,687.14
+Thread[Thread-2,5,main]973,000 inserts : 50 seconds : cum ips=19,435.51 : int ips=9,689.34
+Thread[Thread-2,5,main]1,069,000 inserts : 60 seconds : cum ips=17,794.72 : int ips=9,589.45
+Thread[Thread-2,5,main]1,150,000 inserts : 70 seconds : cum ips=16,408.65 : int ips=8,091.10
+Thread[Thread-2,5,main]1,227,000 inserts : 80 seconds : cum ips=15,318.93 : int ips=7,690.77
+Thread[Thread-2,5,main]1,300,000 inserts : 90 seconds : cum ips=14,443.32 : int ips=7,366.30
+Thread[Thread-2,5,main]1,372,000 inserts : 100 seconds : cum ips=13,717.53 : int ips=7,192.09
+Thread[Thread-2,5,main]1,436,000 inserts : 110 seconds : cum ips=13,051.10 : int ips=6,392.97
+Thread[Thread-2,5,main]1,494,000 inserts : 120 seconds : cum ips=12,445.96 : int ips=5,794.21
+Thread[main,5,main]Done!
+
+Thu Apr  3 01:39:41 PDT 2014 | sysbench benchmark duration = 00:00:10:01

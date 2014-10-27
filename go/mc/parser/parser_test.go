@@ -7,19 +7,27 @@ import (
 	"testing"
 )
 
+func TestProcessSysbenchInsertResult(t *testing.T) {
+	cum, _, _ := ProcessSysbenchInsertResult("sysbench-insert.txt")
+
+	if cum != "12,445.96" {
+		t.Errorf("Cumulative IPS is %v, want 12,445.96", cum)
+	}
+}
+
 func TestProcessSysbenchResult(t *testing.T) {
 	cum, trend, att := ProcessSysbenchResult("sysbench.txt")
 
 	if cum != "741.86" {
-		t.Error("Cumulative TPS is %v, want 741.86", cum)
+		t.Errorf("Cumulative TPS is %v, want 741.86", cum)
 	}
 
 	if trend[0] != "772.95" {
-		t.Error("History IPS[0] is %v, want 772.95", trend[0])
+		t.Errorf("History IPS[0] is %v, want 772.95", trend[0])
 	}
 
 	if att["test-type"] != "sysbench" {
-		t.Error("Attribute[\"test-type\"] is %v, want sysbench", att["test-type"])
+		t.Errorf("Attribute[\"test-type\"] is %v, want sysbench", att["test-type"])
 	}
 
 	// Thread[main,5,main]  writer threads           = 64
@@ -97,29 +105,29 @@ func TestParsePIDStat(t *testing.T) {
 	dps := ParsePIDStat("pidstat.txt")
 
 	if dps.Process != "mongod" {
-		t.Error("Pidstat process-type is " + dps.Process + " expecting mongod")
+		t.Errorf("Pidstat process-type is " + dps.Process + " expecting mongod")
 	}
 
 	if dps.Cpu[0] != 37.36 {
-		t.Error("Pidstat cpu[0] is ", dps.Cpu[0], " expecting 37.36")
+		t.Errorf("Pidstat cpu[0] is ", dps.Cpu[0], " expecting 37.36")
 	}
 
 	if dps.Mem[1] != 10.09 {
-		t.Error("Pidstat mem[1] is ", dps.Mem[1], " expecting 10.09")
+		t.Errorf("Pidstat mem[1] is ", dps.Mem[1], " expecting 10.09")
 	}
 
 	// test a different format
 	dps = ParsePIDStat("pidstat2.txt")
 	if dps.Process != "mongod" {
-		t.Error("Pidstat process-type is " + dps.Process + " expecting mongod")
+		t.Errorf("Pidstat process-type is " + dps.Process + " expecting mongod")
 	}
 
 	if dps.Cpu[0] != 29.09 {
-		t.Error("Pidstat cpu[0] is ", dps.Cpu[0], " expecting 29.09")
+		t.Errorf("Pidstat cpu[0] is ", dps.Cpu[0], " expecting 29.09")
 	}
 
 	if dps.Mem[1] != 25.59 {
-		t.Error("Pidstat mem[1] is ", dps.Mem[1], " expecting 25.59")
+		t.Errorf("Pidstat mem[1] is ", dps.Mem[1], " expecting 25.59")
 	}
 }
 
@@ -127,10 +135,10 @@ func TestParseMongoSIMStat(t *testing.T) {
 	r := ProcessMongoSIMResult("mongo-sim.txt")
 
 	if r.Summary.Nodes[0]["new_user"].Op_lat_total_micros != 2755 {
-		t.Error("mongo-sim op_throughput is ", r.Summary.Nodes[0]["new_user"].Op_lat_total_micros, ", expecting 2755")
+		t.Errorf("mongo-sim op_throughput is ", r.Summary.Nodes[0]["new_user"].Op_lat_total_micros, ", expecting 2755")
 	}
 	if r.Summary.Nodes[2]["post_message"].Op_count != 199 {
-		t.Error("mongo-sim op_count is ", r.Summary.Nodes[0]["post_message"].Op_count, ", expecting 199")
+		t.Errorf("mongo-sim op_count is ", r.Summary.Nodes[0]["post_message"].Op_count, ", expecting 199")
 	}
 
 	s, _ := json.MarshalIndent(r, "  ", "    ")
@@ -142,24 +150,24 @@ func TestParseMongoPerfResult(t *testing.T) {
 	r := ProcessMongoPerfResult("mongo-perf.txt")
 
 	if r == nil {
-		t.Error("[mongo-perf] return value is nil")
+		t.Errorf("[mongo-perf] return value is nil")
 	}
 
 	if len(r) != 12 {
-		t.Error("[mongo-perf] receive wrong number of results, received ", len(r), " expecting 12")
+		t.Errorf("[mongo-perf] receive wrong number of results, received ", len(r), " expecting 12")
 	}
 
 	//fmt.Println(r)
 	if r["Geo.within.center_TH-001"].Version != "db version: 2.6.5-rc2-pre-" {
-		t.Error("[mongo-perf] receive wrong value of results, received ", r["Geo.within.center_TH-001"].Version, " expecting db version: 2.6.5-rc2-pre-")
+		t.Errorf("[mongo-perf] receive wrong value of results, received ", r["Geo.within.center_TH-001"].Version, " expecting db version: 2.6.5-rc2-pre-")
 	}
 
 	if r["Geo.within.center_TH-001"].ClientVersion != "MongoDB shell version: 2.7.5-pre-" {
-		t.Error("[mongo-perf] receive wrong value of results, received ", r["Geo.within.center_TH-001"].ClientVersion, " expecting db version: 2.6.5-rc2-pre-")
+		t.Errorf("[mongo-perf] receive wrong value of results, received ", r["Geo.within.center_TH-001"].ClientVersion, " expecting db version: 2.6.5-rc2-pre-")
 	}
 
 	if r["Geo.within.center_TH-001"].Result != 928.11 {
-		t.Error("[mongo-perf] receive wrong value of results, received ", r["Geo.within.center_TH-001"].Result, " expecting 928.11")
+		t.Errorf("[mongo-perf] receive wrong value of results, received ", r["Geo.within.center_TH-001"].Result, " expecting 928.11")
 	}
 
 	// FIXME need more test for average and CV

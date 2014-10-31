@@ -590,7 +590,7 @@ func (r *TheRun) monitorServer(server string, run_dir string) {
 		Ssh_url:  server,
 		Pem_file: r.PemFile,
 		Logfile:  joinstr(run_dir, "/iostat.log--"+server, ""),
-		Cmd:      "iostat 1"})
+		Cmd:      "iostat -x 1"})
 
 	// r.tasks = append(r.tasks, Task{
 	// 	Ssh_url:  ssh_server,

@@ -453,6 +453,10 @@ type ServerStats struct {
 	Ts      []int64   `json:"ts"`
 	Cpu     []float64 `json:"cpu"`
 	Mem     []float64 `json:"mem"`
+	KB_rd   []float64 `json:"kB_rd"`
+	KB_wr   []float64 `json:"kB_wr"`
+	Cswch   []float64 `json:"cswch"`
+	Nvcswch []float64 `json:"nvcswch"`
 }
 
 // parse output from pidstat
@@ -464,10 +468,19 @@ func ParsePIDStat(file string) ServerStats {
 	var mem []float64
 	var ts []int64
 
-	var cpu_loc, mem_loc int
+	var kb_rd []float64
+	var kb_wr []float64
+	var cswch []float64
+	var nvcswch []float64
+
+	var cpu_loc, mem_loc, kb_rd_loc int
 
 	cpu_loc = -1
 	mem_loc = -1
+	kb_rd_loc = -1
+	var kb_wr_loc int = -1
+	var cswch_loc int = -1
+	var nvcswch_loc int = -1
 
 	process := ""
 
@@ -499,7 +512,16 @@ func ParsePIDStat(file string) ServerStats {
 						cpu_loc = j - 1
 					} else if t[j] == "%MEM" {
 						mem_loc = j - 1
+					} else if t[j] == "kB_rd/s" {
+						kb_rd_loc = j - 1
+					} else if t[j] == "kB_wr/s" {
+						kb_wr_loc = j - 1
+					} else if t[j] == "cswch/s" {
+						cswch_loc = j - 1
+					} else if t[j] == "nvcswch/s" {
+						nvcswch_loc = j - 1
 					}
+
 				}
 			}
 			i++     // next line is what we are looking, which is for process. Not thread
@@ -510,16 +532,6 @@ func ParsePIDStat(file string) ServerStats {
 				// take Datapoint
 				dps := strings.Fields(lines[i])
 
-				// fmt.Println("cpu loc: ", cpu_loc, "  | mem loc: ", mem_loc)
-
-				/*
-					if len(dps) != 21 {
-						// the line is either wrong format of truncated
-						log.Fatalf("Error parsing pidstat, line =(%s), wrong number of data %d",
-							lines[i], len(dps))
-					}
-				*/
-
 				// now take data
 				f, err := strconv.ParseFloat(dps[cpu_loc], 64)
 
@@ -528,15 +540,44 @@ func ParsePIDStat(file string) ServerStats {
 				}
 				cpu = append(cpu, f)
 
+				// mem
 				f, err = strconv.ParseFloat(dps[mem_loc], 64)
 				if err != nil {
 					log.Panicln("Failed to parse Mem for pidstat with error ", err)
 				}
 				mem = append(mem, f)
 
+				// kb_rd
+				f, err = strconv.ParseFloat(dps[kb_rd_loc], 64)
+				if err != nil {
+					log.Panicln("Failed to parse Mem for pidstat with error ", err)
+				}
+				kb_rd = append(kb_rd, f)
+
 				if process == "" {
 					process = dps[len(dps)-1] // the last one is process name
 				}
+
+				// kb_wr
+				f, err = strconv.ParseFloat(dps[kb_wr_loc], 64)
+				if err != nil {
+					log.Panicln("Failed to parse Mem for pidstat with error ", err)
+				}
+				kb_wr = append(kb_wr, f)
+
+				// cswch
+				f, err = strconv.ParseFloat(dps[cswch_loc], 64)
+				if err != nil {
+					log.Panicln("Failed to parse Mem for pidstat with error ", err)
+				}
+				cswch = append(cswch, f)
+
+				// nvcswch
+				f, err = strconv.ParseFloat(dps[nvcswch_loc], 64)
+				if err != nil {
+					log.Panicln("Failed to parse Mem for pidstat with error ", err)
+				}
+				nvcswch = append(nvcswch, f)
 
 				// ts
 				t, e := strconv.ParseInt(dps[0], 10, 64)
@@ -556,5 +597,10 @@ func ParsePIDStat(file string) ServerStats {
 		Cpu:     cpu,
 		Mem:     mem,
 		Ts:      ts,
+
+		KB_rd:   kb_rd,
+		KB_wr:   kb_wr,
+		Cswch:   cswch,
+		Nvcswch: nvcswch,
 	}
 }

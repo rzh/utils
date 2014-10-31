@@ -177,7 +177,7 @@ func (r *TheRun) reportResults(run_id int, log_file string, run_dir string) {
 			fmt.Println("\n********")
 
 			// report to server
-			if len(report_url) != 0 {
+			if submitDyno && len(report_url) != 0 {
 				// report to report_url if it is not empty
 				for _, rurl_ := range report_url {
 					r, err := http.Post(rurl_, "application/json", bytes.NewBuffer(s))

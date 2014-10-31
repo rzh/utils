@@ -41,6 +41,7 @@ var (
 	// run_id     string
 	run        string
 	autorun    bool
+	submitDyno bool
 	config     string
 	test       string
 	report_url []string
@@ -129,10 +130,11 @@ type HammerTask struct {
 }
 
 type TheRun struct {
-	tasks   []Task       `json:"Tasks"`
-	Runs    []HammerTask `json:"runs"`
-	PemFile string       `json:"PemFile",omitempty`
-	Testbed string       `json:"testbed",omitempty`
+	tasks    []Task       `json:"Tasks"`
+	Runs     []HammerTask `json:"runs"`
+	PemFile  string       `json:"PemFile",omitempty`
+	Testbed  string       `json:"testbed",omitempty`
+	MongoURL string       `json:"mongo_url",omitempty`
 
 	MongoDBPath        string
 	MongoStagingDBPath string
@@ -770,7 +772,7 @@ func summarizeFolder(folder string) {
 func init() {
 	var report_url_argv string
 	flag.StringVar(&run, "run", "", "ID for the run")
-	//flag.BoolVar(&autorun, "auto", false, "Automatically generate ID for the run")
+	flag.BoolVar(&submitDyno, "submit", true, "Submit results to Dyna, defauilt to true")
 	flag.StringVar(&config, "config", "", "Config JSON for the run")
 	flag.StringVar(&test, "test", "", "Suffix for the report folder")
 	flag.StringVar(&report_url_argv, "report", "", "URL to report test results")
@@ -806,8 +808,4 @@ func main() {
 	fmt.Printf("%+v", r)
 
 	r.Run(run_dir)
-
-	// fmt.Println(">>> SUMMARY <<<<\n\n\n")
-	// disable for now, FIXME
-	// summarizeFolder(run_dir)
 }

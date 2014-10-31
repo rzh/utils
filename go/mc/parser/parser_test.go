@@ -1,11 +1,6 @@
 package parser
 
-import (
-	"encoding/json"
-	"fmt"
-	"os"
-	"testing"
-)
+import "testing"
 
 func TestProcessSysbenchInsertResult(t *testing.T) {
 	cum, _, _ := ProcessSysbenchInsertResult("sysbench-insert.txt")
@@ -105,15 +100,23 @@ func TestParsePIDStat(t *testing.T) {
 	dps := ParsePIDStat("pidstat.txt")
 
 	if dps.Process != "mongod" {
-		t.Errorf("Pidstat process-type is " + dps.Process + " expecting mongod")
+		t.Errorf("Pidstat process-type is %.2s%s ", dps.Process, " expecting mongod")
 	}
 
 	if dps.Cpu[0] != 37.36 {
-		t.Errorf("Pidstat cpu[0] is ", dps.Cpu[0], " expecting 37.36")
+		t.Errorf("Pidstat cpu[0] is %.2f%s ", dps.Cpu[0], " expecting 37.36")
 	}
 
 	if dps.Mem[1] != 10.09 {
-		t.Errorf("Pidstat mem[1] is ", dps.Mem[1], " expecting 10.09")
+		t.Errorf("Pidstat mem[1] is %.2f%s ", dps.Mem[1], " expecting 10.09")
+	}
+
+	if dps.KB_rd[0] != 1017.00 {
+		t.Errorf("Pidstat KB_rd[0] is %.2f%s ", dps.KB_rd[0], " expecting 1017.00")
+	}
+
+	if dps.KB_wr[0] != 24144.0 {
+		t.Errorf("Pidstat KB_wr[0] is %.2f%s ", dps.KB_wr[0], " expecting 24144.00")
 	}
 
 	// test a different format
@@ -140,10 +143,6 @@ func TestParseMongoSIMStat(t *testing.T) {
 	if r.Summary.Nodes[2]["post_message"].Op_count != 199 {
 		t.Errorf("mongo-sim op_count is ", r.Summary.Nodes[0]["post_message"].Op_count, ", expecting 199")
 	}
-
-	s, _ := json.MarshalIndent(r, "  ", "    ")
-	os.Stdout.Write(s)
-	fmt.Println(len(r.Summary.Nodes))
 }
 
 func TestParseMongoPerfResult(t *testing.T) {

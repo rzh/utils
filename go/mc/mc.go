@@ -144,6 +144,10 @@ type TheRun struct {
 }
 
 func (r *TheRun) runServerCmd(server string, cmd string) ([]byte, error) {
+	if server == "" {
+		return exec.Command(cmd).Output()
+	}
+
 	if r.PemFile != "" {
 		return exec.Command(
 			"/usr/bin/ssh",

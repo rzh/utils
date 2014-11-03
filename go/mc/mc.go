@@ -202,7 +202,7 @@ func cleanup(lines []string) []string {
 
 func (r *TheRun) runMongoCMD(server, cmd string) []byte {
 	output, err := r.runServerCmd(server,
-		"~/mongo --norc --eval \"print('serverBuildInfo');printjson("+cmd+")\"")
+		"~/bin/mongo --norc --eval \"print('serverBuildInfo');printjson("+cmd+")\"")
 
 	if err != nil {
 		log.Panicln("Failed to run {", cmd, "} from server [", server, "] with error [", err, "]")

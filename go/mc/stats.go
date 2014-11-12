@@ -90,7 +90,7 @@ func (r *TheRun) reportResults(run_id int, log_file string, run_dir string) {
 
 	if len(report_url) == 0 {
 		report_url = append(report_url, "http://54.68.84.192:8080/api/v1/results")
-		report_url = append(report_url, "http://dyno.mongodb.parts/api/v1/results")
+		// report_url = append(report_url, "http://dyno.mongodb.parts/api/v1/results")
 	}
 	var err error
 	switch t {
@@ -139,6 +139,8 @@ func (r *TheRun) reportResults(run_id int, log_file string, run_dir string) {
 		copy(r.Runs[run_id].Stats.Summary.Nodes, result_.Summary.Nodes)
 		// r.Runs[run_id].Stats.Testbed = result_.Testbed
 		r.Runs[run_id].Stats.TestDriver = result_.TestDriver
+		r.Runs[run_id].Stats.RunSeconds = result_.RunSeconds
+		r.Runs[run_id].Stats.RunNanos = result_.RunNanos
 
 		// merge attributes together
 		for k, v := range result_.Attributes {

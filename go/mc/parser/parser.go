@@ -260,6 +260,8 @@ type Stats struct {
 	TickPerOp   float64  `json:"tick_per_op"`
 	Throughput  float64  `json:"throughput"`
 	TestRunTime int64    `json:"test_run_time"`
+	RunSeconds  int64    `json:"run_seconds,omitempty"`
+	RunNanos    int64    `json:"run_nanos,omitempty"`
 	// ID         string
 	// Type         string // hammertime, sysbench, mongo-sim
 	History      []string

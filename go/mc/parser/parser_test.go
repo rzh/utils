@@ -119,6 +119,14 @@ func TestParsePIDStat(t *testing.T) {
 		t.Errorf("Pidstat KB_wr[0] is %.2f%s ", dps.KB_wr[0], " expecting 24144.00")
 	}
 
+	if dps.Cswch[0] != 29718.0 {
+		t.Errorf("Pidstat Cswch[0] is %.2f%s ", dps.Cswch[0], " expecting 29718.00")
+	}
+
+	if dps.Nvcswch[1] != 1196.0 {
+		t.Errorf("Pidstat Nvcswch[0] is %.2f%s ", dps.Nvcswch[1], " expecting 1196.00")
+	}
+
 	// test a different format
 	dps = ParsePIDStat("pidstat2.txt")
 	if dps.Process != "mongod" {
@@ -131,6 +139,14 @@ func TestParsePIDStat(t *testing.T) {
 
 	if dps.Mem[1] != 25.59 {
 		t.Errorf("Pidstat mem[1] is ", dps.Mem[1], " expecting 25.59")
+	}
+
+	if dps.Cswch[0] != 2271.0 {
+		t.Errorf("Pidstat Cswch[0] is %.2f%s ", dps.Cswch[0], " expecting 2271.00")
+	}
+
+	if dps.Nvcswch[1] != 270492.0 {
+		t.Errorf("Pidstat Nvcswch[0] is %.2f%s ", dps.Nvcswch[1], " expecting 270492.00")
 	}
 }
 

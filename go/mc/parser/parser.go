@@ -567,20 +567,6 @@ func ParsePIDStat(file string) ServerStats {
 				}
 				kb_wr = append(kb_wr, f)
 
-				// cswch
-				f, err = strconv.ParseFloat(dps[cswch_loc], 64)
-				if err != nil {
-					log.Panicln("Failed to parse Mem for pidstat with error ", err)
-				}
-				cswch = append(cswch, f)
-
-				// nvcswch
-				f, err = strconv.ParseFloat(dps[nvcswch_loc], 64)
-				if err != nil {
-					log.Panicln("Failed to parse Mem for pidstat with error ", err)
-				}
-				nvcswch = append(nvcswch, f)
-
 				// ts
 				t, e := strconv.ParseInt(dps[0], 10, 64)
 				if e != nil {
@@ -588,6 +574,33 @@ func ParsePIDStat(file string) ServerStats {
 				}
 
 				ts = append(ts, t)
+
+				// cswch and nvcswh need sum all threads' read together
+				i++
+				cswch_ := 0.0
+				nvcswch_ := 0.0
+				for i < len(lines) && lines[i] != "" {
+					dps := strings.Fields(lines[i])
+					// cswch
+					f, err = strconv.ParseFloat(dps[cswch_loc], 64)
+					if err != nil {
+						log.Panicln("Failed to parse Mem for pidstat with error ", err)
+					}
+
+					cswch_ = cswch_ + f
+
+					// nvcswch
+					f, err = strconv.ParseFloat(dps[nvcswch_loc], 64)
+					if err != nil {
+						log.Panicln("Failed to parse Mem for pidstat with error ", err)
+					}
+					nvcswch_ = nvcswch_ + f
+
+					i++
+				}
+				cswch = append(cswch, cswch_)
+				nvcswch = append(nvcswch, nvcswch_)
+
 			}
 		}
 	}

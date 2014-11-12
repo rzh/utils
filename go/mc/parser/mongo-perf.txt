@@ -1,7 +1,11 @@
 MongoDB shell version: 2.7.5-pre-
 connecting to: 127.0.0.1:27017/test
-db version: 2.7.5
+db version: 2.6.5-rc2-pre-
 2966c35b20416d55c3d481e5f254a9befb1b2338
+
+load('util/utils.js')
+load('./testcases/t.js')
+runTests([5, 5], 1, 0, 10, 1, '', 'localhost', '27017', 'what', false, 0, false, false);
 
 Geo.within.center
 1	928.11

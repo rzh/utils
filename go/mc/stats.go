@@ -94,6 +94,19 @@ func (r *TheRun) reportResults(run_id int, log_file string, run_dir string) {
 	}
 	var err error
 	switch t {
+	case "hammer":
+		log.Println("Process sysbench results")
+		cum, historyRps, historyAvgResponseTime, att := parser.ProcessHammerResult(log_file)
+		r.Runs[run_id].Stats.Summary.AllNodes.Op_throughput, err = strconv.ParseFloat(strings.Replace(cum, ",", "", -1), 64)
+
+		r.Runs[run_id].Stats.History = historyRps
+		r.Runs[run_id].Stats.HistoryResponseTime = historyAvgResponseTime
+
+		// merge attribute into Stats
+		for k, v := range att {
+			r.Runs[run_id].Stats.Attributes[k] = v
+		}
+
 	case "sysbench":
 		log.Println("Process sysbench results")
 		cum, history, att := parser.ProcessSysbenchResult(log_file)
@@ -193,7 +206,7 @@ func (r *TheRun) reportResults(run_id int, log_file string, run_dir string) {
 			}
 		}
 
-		// mongo-perf will not report server stats since it is not meaningful
+		// mongo-perf will not report server stats since it is meaningless at this moment
 		return
 
 	case "task":
@@ -227,7 +240,7 @@ func (r *TheRun) reportResults(run_id int, log_file string, run_dir string) {
 
 	r.Runs[run_id].Stats.Throughput = r.Runs[run_id].Stats.Summary.AllNodes.Op_throughput
 	s, _ := json.MarshalIndent(r.Runs[run_id].Stats, "  ", "    ")
-	if len(report_url) != 0 {
+	if submitDyno && len(report_url) != 0 {
 		// report to report_url if it is not empty
 
 		for _, rurl := range report_url {

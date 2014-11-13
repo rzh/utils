@@ -264,8 +264,9 @@ type Stats struct {
 	RunNanos    int64    `json:"run_nanos,omitempty"`
 	// ID         string
 	// Type         string // hammertime, sysbench, mongo-sim
-	History      []string
-	Server_Stats map[string]ServerStats `json:"server_stats"`
+	History             []string
+	HistoryResponseTime []string
+	Server_Stats        map[string]ServerStats `json:"server_stats"`
 }
 
 func ProcessMongoSIMResult(file string) *Stats {
@@ -618,4 +619,71 @@ func ParsePIDStat(file string) ServerStats {
 		Cswch:   cswch,
 		Nvcswch: nvcswch,
 	}
+}
+
+func ProcessHammerResult(file string) (string, []string, []string, map[string]string) {
+	var cum string
+	var trendAvg []string
+	var trendRps []string
+	att := make(map[string]string)
+
+	att["test-type"] = "hammer"
+
+	f, err := ioutil.ReadFile(file)
+
+	if err != nil {
+		log.Fatal("cannot open file " + file)
+	}
+
+	lines := strings.Split(string(f), "\n")
+
+	// find thread in this format : writer threads           = 64
+
+	find_parameter := func(lines []string, pattern string) string {
+		var re string
+		re_thread := regexp.MustCompile(pattern)
+
+		for i := 0; i < len(lines); i++ {
+			t := re_thread.FindStringSubmatch(lines[i])
+
+			if len(t) > 0 {
+				if re == "" || re == lines[i] {
+					re = t[1]
+				} else {
+					log.Panicln("[hammer-parser] Found different parameter: ", lines[i], " vs ", re)
+				}
+			}
+		}
+
+		if re == "" {
+			log.Panicf("Failed to find value for regexp: %s", pattern)
+		}
+		return re
+	}
+
+	att["nThreads"] = find_parameter(lines, "         conn : ([0-9]+)")
+	att["avgResponseTime"] = find_parameter(lines, "        avg\\(ms\\) : ([0-9.]+)")
+	att["errorRatio"] = find_parameter(lines, "     err ratio\\(\\%\\) : ([0-9.]+)")
+	att["slowRatio"] = find_parameter(lines, "        slow ratio\\(\\%\\) : ([0-9.]+)")
+	cum = find_parameter(lines, "         ack/s : ([0-9]+)")
+	// att["nCollections"] = find_parameter(lines, "collections[ ]+= ([0-9]+)")
+	// att["nCollectionSize"] = find_parameter(lines, "documents per collection[ ]+= ([0-9,]+)")
+	// att["nFeedbackSeconds"] = find_parameter(lines, "feedback seconds[ ]+= ([0-9]+)")
+	// att["nRunSeconds"] = find_parameter(lines, "run seconds[ ]+= ([0-9]+)")
+
+	// Nov 13 10:31:10  Total send:  574024  req/s:  9567.0  ack/s:  9567.0  avg(ms):  0.104305  pending:  1  err:  0 | 0.00%  slow:  0.00%  | Last avg(ms):  0.094658  send:  105397  | Mongo conn: 4  Mem res(M): 1182 mapped(M): 2160 PageFault: 0 DB(htest) locked: 1.42% qr: 0 qw: 0 ar: 0 aw: 0 avg flush(ms): 9 last flush(ms): 248
+	re := regexp.MustCompile("Last avg\\(ms\\):  ([0-9.]+)  send:  ([0-9]+)  ")
+
+	// get the historical interval number
+	for i := 0; i < len(lines); i++ {
+		t := re.FindStringSubmatch(lines[i])
+		if len(t) > 0 {
+			trendAvg = append(trendAvg, t[1])
+			trendRps = append(trendRps, t[2])
+		} else {
+			// no match, just skip
+		}
+	}
+
+	return cum, trendRps, trendAvg, att
 }

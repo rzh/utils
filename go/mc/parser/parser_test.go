@@ -187,3 +187,39 @@ func TestParseMongoPerfResult(t *testing.T) {
 
 	// FIXME need more test for average and CV
 }
+
+func TestProcessHammerResult(t *testing.T) {
+	cum, trendRps, trendAvg, att := ProcessHammerResult("hammer.txt")
+
+	if cum != "9567" {
+		t.Errorf("Cumulative TPS is %v, want 741.86", cum)
+	}
+
+	if att["test-type"] != "hammer" {
+		t.Errorf("Attribute[\"test-type\"] is %v, want sysbench", att["test-type"])
+	}
+
+	if trendRps[0] != "106059" {
+		t.Errorf("History RPS[0] is %v, want 106059", trendRps[0])
+	}
+
+	if trendAvg[0] != "0.094142" {
+		t.Errorf("History avgResponse[0] is %v, want 0.094142", trendAvg[0])
+	}
+
+	if att["nThreads"] != "4" {
+		t.Errorf("Attribute[nThreads] is %s, want 64", att["nThreads"])
+	}
+
+	if att["avgResponseTime"] != "0.104305" {
+		t.Errorf("Attribute[avgResponseTime] is %s, want 64", att["avgResponseTime"])
+	}
+
+	if att["errorRatio"] != "10.00" {
+		t.Errorf("Attribute[errorRatio] is %s, want 10.00", att["errorRatio"])
+	}
+
+	if att["slowRatio"] != "18.00" {
+		t.Errorf("Attribute[slowRatio] is %s, want 18.00", att["slowRatio"])
+	}
+}

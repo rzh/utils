@@ -205,7 +205,7 @@ func (r *TheRun) runMongoCMD(server, cmd string) []byte {
 		"~/bin/mongo --norc --eval \"print('serverBuildInfo');printjson("+cmd+")\"")
 
 	if err != nil {
-		log.Panicln("Failed to run {", cmd, "} from server [", server, "] with error [", err, "]")
+		log.Panicln("Failed to run {", cmd, "} from server [", server, "] with error [", err, "]\n", output)
 	}
 
 	lines := str.Split(string(output), "\n")
@@ -439,6 +439,11 @@ func (r *TheRun) RunClientTasks(i int, run_dir string) {
 	if err != nil {
 		// do not quit if this client return error code FIXME
 		// log.Fatal("Hammer client failed with -> ", err)
+	}
+
+	if r.Runs[i].Type == "task" {
+		// no any further work needed for plain task
+		return
 	}
 
 	r.Runs[i].Stats.End_Time.Date = time.Now().UnixNano() / int64(time.Millisecond)

@@ -313,10 +313,13 @@ func (r *TheRun) findMongoD_PID(server string) string {
 	_pid, err = r.runServerCmd(server, "/bin/pidof mongod")
 	if err != nil {
 		// now to try /sbin/pidof
-		_pid, err = r.runServerCmd(server, "/sbin/pidof mongod")
+		_pid, err = r.runServerCmd(server, "/sbin/pidof mongos")
 
 		if err != nil {
-			log.Fatalln("Failed to find MongoD PID: ", err)
+			_pid, err = r.runServerCmd(server, "/sbin/pidof mongod")
+			if err != nil {
+				log.Fatalln("Failed to find mongod/mongos PID on server : ", server, err)
+			}
 		}
 	}
 
@@ -593,13 +596,19 @@ func (r *TheRun) monitorServer(server string, run_dir string) {
 		Ssh_url:  server,
 		Pem_file: r.PemFile,
 		Logfile:  joinstr(run_dir, "/pidstat.log--"+server, ""),
-		Cmd:      joinstr("pidstat 1 -Ihtruwd -p", pid, " ")})
+		Cmd:      joinstr("pidstat 2 -Ihtruwd -p", pid, " ")})
 
 	r.tasks = append(r.tasks, Task{
 		Ssh_url:  server,
 		Pem_file: r.PemFile,
 		Logfile:  joinstr(run_dir, "/iostat.log--"+server, ""),
-		Cmd:      "iostat -x 1"})
+		Cmd:      "iostat -x 2"})
+
+	r.tasks = append(r.tasks, Task{
+		Ssh_url:  server,
+		Pem_file: r.PemFile,
+		Logfile:  joinstr(run_dir, "/heap.log--"+server, ""),
+		Cmd:      "while true; do echo ++++ `date` ++++; cat /proc/" + pid + "/maps | grep heap; sleep 2; done"})
 
 	// r.tasks = append(r.tasks, Task{
 	// 	Ssh_url:  ssh_server,

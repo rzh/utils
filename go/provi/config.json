@@ -1,0 +1,11 @@
+{
+    "servers": ["1.1.1.1",
+                "1.1.1.2"
+    ],
+    "pem": "~/bin/aws.pem",
+    "user": "ec2-user",
+    "tasks": ["pwd", 
+              "sudo -S yum install wget tmux git scons -y",
+              "sudo -S yum update -y"
+    ] 
+}

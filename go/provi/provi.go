@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"log"
 	"os"
@@ -38,25 +37,26 @@ func (k *keychain) Key(i int) (ssh.PublicKey, error) {
 	return k.keys[i].PublicKey(), nil
 }
 
+/*
 func (k *keychain) Sign(i int, rand io.Reader, data []byte) (sig []byte, err error) {
 	return k.keys[i].Sign(rand, data)
-}
+}*/
 
 func (k *keychain) add(key ssh.Signer) {
 	k.keys = append(k.keys, key)
 }
 
-func (k *keychain) loadPEM(file string) error {
+func (k *keychain) loadPEM(file string) (ssh.Signer, error) {
 	buf, err := ioutil.ReadFile(file)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	key, err := ssh.ParsePrivateKey(buf)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	k.add(key)
-	return nil
+	return key, nil
 }
 
 // end of ssh key support
@@ -65,7 +65,7 @@ func (j *Jobs) runTasks() {
 
 	// load ssh key
 	k := new(keychain)
-	err := k.loadPEM(j.Pem_file)
+	key, err := k.loadPEM(j.Pem_file)
 
 	if err != nil {
 		panic("Cannot load key [" + j.Pem_file + "]: " + err.Error())
@@ -87,8 +87,8 @@ func (j *Jobs) runTasks() {
 		// create ssh session
 		config := &ssh.ClientConfig{
 			User: j.User,
-			Auth: []ssh.ClientAuth{
-				ssh.ClientAuthKeyring(k),
+			Auth: []ssh.AuthMethod{
+				ssh.PublicKeys(key),
 			},
 		}
 
@@ -97,7 +97,7 @@ func (j *Jobs) runTasks() {
 			log.Fatal("Failed to connect to [" + j.Servers[i] + "] with error: " + err.Error())
 		}
 
-		go func(x int, s *ssh.ClientConn, o *os.File) {
+		go func(x int, s *ssh.Client, o *os.File) {
 			defer wt.Done()
 			j.runTask(x, s, o)
 		}(i, client, outfile)
@@ -105,13 +105,13 @@ func (j *Jobs) runTasks() {
 	wt.Wait()
 }
 
-func (p *Jobs) runTask(i int, s *ssh.ClientConn, outfile *os.File) {
+func (p *Jobs) runTask(i int, s *ssh.Client, outfile *os.File) {
 	for j := 0; j < len(p.Tasks); j++ {
 		p.runCmd(i, p.Tasks[j], s, outfile)
 	}
 }
 
-func (p *Jobs) runCmd(i int, cmd string, client *ssh.ClientConn, outfile *os.File) {
+func (p *Jobs) runCmd(i int, cmd string, client *ssh.Client, outfile *os.File) {
 	session, err := client.NewSession()
 	if err != nil {
 		log.Fatal("Failed to create SSH session to server [" + p.Servers[i] + "] with error: " + err.Error())

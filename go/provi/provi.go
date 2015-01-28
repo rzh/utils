@@ -2,13 +2,14 @@ package main
 
 import (
 	"encoding/json"
-	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
 	"sync"
 	"time"
+
+	"github.com/codegangsta/cli"
 
 	"code.google.com/p/go.crypto/ssh"
 )
@@ -17,6 +18,16 @@ var (
 	config string
 	wt     sync.WaitGroup
 )
+
+const CLR_0 = "\x1b[30;1m"
+const CLR_R = "\x1b[31;1m"
+const CLR_G = "\x1b[32;1m"
+const CLR_Y = "\x1b[33;1m"
+const CLR_B = "\x1b[34;1m"
+const CLR_M = "\x1b[35;1m"
+const CLR_C = "\x1b[36;1m"
+const CLR_W = "\x1b[37;1m"
+const CLR_N = "\x1b[0m"
 
 type Jobs struct {
 	Servers  []string `json:"servers"`
@@ -136,17 +147,21 @@ func (p *Jobs) runCmd(i int, cmd string, client *ssh.Client, outfile *os.File) {
 	if err != nil {
 		log.Fatal("run command ["+cmd+"] on server ("+p.Servers[i]+") failed with -> ", err)
 	}
-	session.Wait()
+	err = session.Wait()
 
-	log.Println(cmd, " done for server ", p.Servers[i])
+	// TODO: make cmd not longer than 80
+	if err == nil {
+		log.Printf("[%15s] %-80s %s%s%s", p.Servers[i], cmd, CLR_G, "√", CLR_N)
+	} else {
+		log.Printf("[%15s] %-80s %s%s%s", p.Servers[i], cmd, CLR_R, "✗", CLR_N)
+	}
 }
 
 func init() {
-	flag.StringVar(&config, "config", "", "Config JSON for the run")
+	//	flag.StringVar(&config, "config", "", "Config JSON for the run")
 }
 
 func run(config string) error {
-
 	var t Jobs
 
 	// read json file
@@ -168,11 +183,90 @@ func run(config string) error {
 }
 
 func main() {
-	flag.Parse()
+	app := cli.NewApp()
+	app.Usage = "cluster management tool"
+	app.Name = "provi"
+	app.EnableBashCompletion = true
 
-	if config == "" {
-		config = "./config.json"
+	app.Commands = []cli.Command{
+
+		// init a cluster from template
+		{
+			Name:      "init",
+			ShortName: "i",
+			Usage:     "initiate a cloud from template",
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "cluster, c",
+					Value: "config.json",
+					Usage: "name of the cluster",
+				},
+				cli.StringFlag{
+					Name:  "template, t",
+					Value: "shard_template.json",
+					Usage: "name of the template",
+				},
+			},
+			Action: func(c *cli.Context) {
+				log.Printf("initialize cluster %s%s%s with template %s%s%s\n",
+					CLR_G, c.String("cluster"), CLR_N,
+					CLR_Y, c.String("template"), CLR_N)
+			},
+		},
+
+		// provision the cluster based on roles
+		{
+			Name:      "provision",
+			ShortName: "p",
+			Usage:     "provision a cluster",
+			Flags: []cli.Flag{
+				cli.StringFlag{
+					Name:  "cluster, c",
+					Value: "config.json",
+					Usage: "name of the cluster",
+				},
+			},
+			Action: func(c *cli.Context) {
+				println("providion cluster: ", c.Args().First())
+				run(c.String("cluster"))
+			},
+		},
+
+		// manuplate collection of templates
+		{
+			Name:      "template",
+			ShortName: "r",
+			Usage:     "dealing with templates",
+			Subcommands: []cli.Command{
+				{
+					Name:  "add",
+					Usage: "add a new template",
+					Action: func(c *cli.Context) {
+						println("new task template: ", c.Args().First())
+					},
+				},
+				{
+					Name:  "remove",
+					Usage: "remove an existing template",
+					Action: func(c *cli.Context) {
+						println("removed task template: ", c.Args().First())
+					},
+				},
+			},
+		},
 	}
 
-	run(config)
+	app.Flags = []cli.Flag{
+		cli.StringFlag{
+			Name:  "cluster, c",
+			Usage: "name of the cluster",
+		},
+		cli.StringFlag{
+			Name:  "template, t",
+			Value: "config.json",
+			Usage: "template file for the cluster",
+		},
+	}
+
+	app.Run(os.Args)
 }

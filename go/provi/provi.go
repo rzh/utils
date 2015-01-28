@@ -256,17 +256,5 @@ func main() {
 		},
 	}
 
-	app.Flags = []cli.Flag{
-		cli.StringFlag{
-			Name:  "cluster, c",
-			Usage: "name of the cluster",
-		},
-		cli.StringFlag{
-			Name:  "template, t",
-			Value: "config.json",
-			Usage: "template file for the cluster",
-		},
-	}
-
 	app.Run(os.Args)
 }

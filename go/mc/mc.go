@@ -604,11 +604,19 @@ func (r *TheRun) monitorServer(server string, run_dir string) {
 		Logfile:  joinstr(run_dir, "/iostat.log--"+server, ""),
 		Cmd:      "iostat -x 2"})
 
+	// heap monitor
 	r.tasks = append(r.tasks, Task{
 		Ssh_url:  server,
 		Pem_file: r.PemFile,
 		Logfile:  joinstr(run_dir, "/heap.log--"+server, ""),
-		Cmd:      "while true; do echo ++++ `date` ++++; cat /proc/" + pid + "/maps | grep heap; sleep 2; done"})
+		Cmd:      "bash -c \"\\\"while true; do echo ++++ `date` ++++; cat /proc/" + pid + "/maps | grep heap; sleep 2; done\\\"\""})
+
+	// mongostatus monitor
+	r.tasks = append(r.tasks, Task{
+		Ssh_url:  server,
+		Pem_file: r.PemFile,
+		Logfile:  joinstr(run_dir, "/mongod-ss.log--"+server, ""),
+		Cmd:      "~/bin/mongo --eval \"while(true) {print(JSON.stringify(db.serverStatus())); sleep(1000)}\""})
 
 	// r.tasks = append(r.tasks, Task{
 	// 	Ssh_url:  ssh_server,

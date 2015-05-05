@@ -95,7 +95,7 @@ func (r *TheRun) reportResults(run_id int, log_file string, run_dir string) {
 	var err error
 	switch t {
 	case "hammer":
-		log.Println("Process sysbench results")
+		log.Println("Process hammer results")
 		cum, historyRps, historyAvgResponseTime, att := parser.ProcessHammerResult(log_file)
 		r.Runs[run_id].Stats.Summary.AllNodes.Op_throughput, err = strconv.ParseFloat(strings.Replace(cum, ",", "", -1), 64)
 
@@ -106,6 +106,13 @@ func (r *TheRun) reportResults(run_id int, log_file string, run_dir string) {
 		for k, v := range att {
 			r.Runs[run_id].Stats.Attributes[k] = v
 		}
+
+	case "ycsb":
+		// YCSB
+		log.Println("Processing YCSB results")
+		throught, _ := parser.ProcessYCSBResult(log_file)
+
+		r.Runs[run_id].Stats.Summary.AllNodes.Op_throughput = throught
 
 	case "sysbench":
 		log.Println("Process sysbench results")
@@ -141,6 +148,7 @@ func (r *TheRun) reportResults(run_id int, log_file string, run_dir string) {
 		for k, v := range att {
 			r.Runs[run_id].Stats.Attributes[k] = v
 		}
+
 	case "mongo-sim":
 		log.Println("Processing mongo-sim results")
 		result_ := parser.ProcessMongoSIMResult(log_file)
